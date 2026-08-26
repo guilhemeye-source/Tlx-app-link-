@@ -1,451 +1,273 @@
---!strict
--- MEU HUB - SEU PRÓPRIO JOGO
--- AIM + ESP + SPEED + JUMP + FOV + AUTO KILL NPC
--- Botão bolinha para minimizar
+-- Loader.lua
+-- TELECINESE - PARA USO NO SEU PRÓPRIO JOGO
 
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
-local Player = Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
 
--- CONFIG
-local Speed = 16
-local JumpPower = 50
-local ESPEnabled = false
-local AimEnabled = false
-local AutoKillNPC = false
-local FOVSize = 120
+-- =========================
+-- CONFIGURAÇÃO
+-- =========================
 
--- LIMPAR HUB ANTIGO
-local Old = PlayerGui:FindFirstChild("MeuHub")
-if Old then
-    Old:Destroy()
-end
+local TELEKINESIS_DISTANCE = 35
+local HOLD_DISTANCE = 12
+local FORCE = 8000
 
+local telekinesisEnabled = false
+local holdingObject = nil
+local bodyPosition = nil
+
+-- =========================
 -- GUI
-local Gui = Instance.new("ScreenGui")
-Gui.Name = "MeuHub"
-Gui.ResetOnSpawn = false
-Gui.Parent = PlayerGui
-
--- =========================
--- PAINEL PRINCIPAL
 -- =========================
 
-local Main = Instance.new("Frame")
-Main.Name = "Main"
-Main.Size = UDim2.fromOffset(290, 410)
-Main.Position = UDim2.fromScale(0.5, 0.5)
-Main.AnchorPoint = Vector2.new(0.5, 0.5)
-Main.BackgroundTransparency = 0.08
-Main.Parent = Gui
+local gui = Instance.new("ScreenGui")
+gui.Name = "LoaderGui"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
 
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 16)
-MainCorner.Parent = Main
+-- Painel
+local panel = Instance.new("Frame")
+panel.Size = UDim2.new(0, 330, 0, 230)
+panel.Position = UDim2.new(0.5, -165, 0.5, -115)
+panel.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+panel.BorderSizePixel = 0
+panel.Parent = gui
 
-local MainStroke = Instance.new("UIStroke")
-MainStroke.Thickness = 2
-MainStroke.Parent = Main
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 16)
+corner.Parent = panel
 
--- TÍTULO
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -80, 0, 45)
-Title.Position = UDim2.fromOffset(40, 5)
-Title.BackgroundTransparency = 1
-Title.Text = "⚡ MEU HUB"
-Title.TextScaled = true
-Title.Font = Enum.Font.GothamBold
-Title.Parent = Main
+-- Título
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 55)
+title.BackgroundTransparency = 1
+title.Text = "LOADER"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 26
+title.Font = Enum.Font.GothamBold
+title.Parent = panel
+
+-- Subtítulo
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(1, -30, 0, 30)
+subtitle.Position = UDim2.new(0, 15, 0, 48)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "Painel de funções"
+subtitle.TextColor3 = Color3.fromRGB(160, 160, 170)
+subtitle.TextSize = 14
+subtitle.Font = Enum.Font.Gotham
+subtitle.Parent = panel
+
+-- Botão Telecinese
+local teleButton = Instance.new("TextButton")
+teleButton.Size = UDim2.new(1, -30, 0, 60)
+teleButton.Position = UDim2.new(0, 15, 0, 90)
+teleButton.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+teleButton.BorderSizePixel = 0
+teleButton.Text = "TELECINESE  •  OFF"
+teleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+teleButton.TextSize = 17
+teleButton.Font = Enum.Font.GothamBold
+teleButton.Parent = panel
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 12)
+buttonCorner.Parent = teleButton
+
+-- Informação
+local info = Instance.new("TextLabel")
+info.Size = UDim2.new(1, -30, 0, 50)
+info.Position = UDim2.new(0, 15, 0, 160)
+info.BackgroundTransparency = 1
+info.Text = "Ative e clique em um objeto físico\npara segurá-lo e movê-lo."
+info.TextColor3 = Color3.fromRGB(170, 170, 180)
+info.TextSize = 13
+info.Font = Enum.Font.Gotham
+info.TextWrapped = true
+info.Parent = panel
 
 -- =========================
--- BOTÃO DE MINIMIZAR
+-- BOLINHA FLUTUANTE
 -- =========================
 
-local MinimizeButton = Instance.new("TextButton")
-MinimizeButton.Size = UDim2.fromOffset(35, 35)
-MinimizeButton.Position = UDim2.new(1, -40, 0, 8)
-MinimizeButton.Text = "—"
-MinimizeButton.TextScaled = true
-MinimizeButton.Font = Enum.Font.GothamBold
-MinimizeButton.Parent = Main
+local ball = Instance.new("TextButton")
+ball.Size = UDim2.new(0, 60, 0, 60)
+ball.Position = UDim2.new(1, -80, 0.5, -30)
+ball.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+ball.BorderSizePixel = 0
+ball.Text = "TK"
+ball.TextColor3 = Color3.fromRGB(255, 255, 255)
+ball.TextSize = 18
+ball.Font = Enum.Font.GothamBold
+ball.Visible = true
+ball.Parent = gui
 
-local MinCorner = Instance.new("UICorner")
-MinCorner.CornerRadius = UDim.new(1, 0)
-MinCorner.Parent = MinimizeButton
-
--- =========================
--- BOLINHA
--- =========================
-
-local MiniButton = Instance.new("TextButton")
-MiniButton.Name = "MiniButton"
-MiniButton.Size = UDim2.fromOffset(58, 58)
-MiniButton.Position = UDim2.new(0, 20, 0.5, 0)
-MiniButton.AnchorPoint = Vector2.new(0, 0.5)
-MiniButton.Text = "⚡"
-MiniButton.TextScaled = true
-MiniButton.Font = Enum.Font.GothamBold
-MiniButton.Visible = false
-MiniButton.Parent = Gui
-
-local MiniCorner = Instance.new("UICorner")
-MiniCorner.CornerRadius = UDim.new(1, 0)
-MiniCorner.Parent = MiniButton
-
-local MiniStroke = Instance.new("UIStroke")
-MiniStroke.Thickness = 2
-MiniStroke.Parent = MiniButton
+local ballCorner = Instance.new("UICorner")
+ballCorner.CornerRadius = UDim.new(1, 0)
+ballCorner.Parent = ball
 
 -- =========================
--- CRIAR BOTÃO
+-- FUNÇÕES
 -- =========================
 
-local function CreateButton(Text, Y)
+local function updateButton()
+	if telekinesisEnabled then
+		teleButton.Text = "TELECINESE  •  ON"
+		teleButton.BackgroundColor3 = Color3.fromRGB(70, 130, 255)
 
-    local Button = Instance.new("TextButton")
+		ball.Text = "ON"
+		ball.BackgroundColor3 = Color3.fromRGB(70, 130, 255)
+	else
+		teleButton.Text = "TELECINESE  •  OFF"
+		teleButton.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 
-    Button.Size = UDim2.new(1, -30, 0, 40)
-    Button.Position = UDim2.fromOffset(15, Y)
-    Button.BackgroundTransparency = 0.05
-    Button.Text = Text
-    Button.TextScaled = true
-    Button.Font = Enum.Font.GothamBold
-    Button.Parent = Main
+		ball.Text = "TK"
+		ball.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+	end
+end
 
-    local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 10)
-    Corner.Parent = Button
+local function releaseObject()
+	if bodyPosition then
+		bodyPosition:Destroy()
+		bodyPosition = nil
+	end
 
-    return Button
+	holdingObject = nil
+end
+
+local function getTarget()
+	if not mouse.Target then
+		return nil
+	end
+
+	local target = mouse.Target
+
+	if not target:IsA("BasePart") then
+		return nil
+	end
+
+	if target.Anchored then
+		return nil
+	end
+
+	local character = player.Character
+	if not character then
+		return nil
+	end
+
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return nil
+	end
+
+	local distance = (target.Position - root.Position).Magnitude
+
+	if distance > TELEKINESIS_DISTANCE then
+		return nil
+	end
+
+	return target
+end
+
+local function grabObject()
+	if not telekinesisEnabled then
+		return
+	end
+
+	local target = getTarget()
+
+	if not target then
+		return
+	end
+
+	releaseObject()
+
+	holdingObject = target
+
+	bodyPosition = Instance.new("BodyPosition")
+	bodyPosition.MaxForce = Vector3.new(FORCE, FORCE, FORCE)
+	bodyPosition.P = 30000
+	bodyPosition.D = 1500
+	bodyPosition.Position = target.Position
+	bodyPosition.Parent = target
 end
 
 -- =========================
--- BOTÕES
+-- ATIVAR / DESATIVAR
 -- =========================
 
-local AimButton =
-    CreateButton("🎯 AIM ASSIST: OFF", 55)
+local function toggleTelekinesis()
+	telekinesisEnabled = not telekinesisEnabled
 
-local ESPButton =
-    CreateButton("👁️ ESP: OFF", 105)
+	if not telekinesisEnabled then
+		releaseObject()
+	end
 
-local SpeedButton =
-    CreateButton("🏃 VELOCIDADE: 16", 155)
-
-local JumpButton =
-    CreateButton("🦘 PULO: 50", 205)
-
-local FOVButton =
-    CreateButton("⭕ FOV: 120", 255)
-
-local AutoKillButton =
-    CreateButton("☠️ AUTO KILL NPC: OFF", 305)
-
-local CloseButton =
-    CreateButton("✖ FECHAR", 355)
-
--- =========================
--- MINIMIZAR
--- =========================
-
-MinimizeButton.MouseButton1Click:Connect(function()
-
-    Main.Visible = false
-    MiniButton.Visible = true
-
-end)
-
-MiniButton.MouseButton1Click:Connect(function()
-
-    Main.Visible = true
-    MiniButton.Visible = false
-
-end)
-
--- =========================
--- AIM
--- =========================
-
-AimButton.MouseButton1Click:Connect(function()
-
-    AimEnabled = not AimEnabled
-
-    AimButton.Text =
-        AimEnabled
-        and "🎯 AIM ASSIST: ON"
-        or "🎯 AIM ASSIST: OFF"
-
-end)
-
--- =========================
--- ESP
--- =========================
-
-local function UpdateESP()
-
-    for _, OtherPlayer in ipairs(Players:GetPlayers()) do
-
-        if OtherPlayer ~= Player
-            and OtherPlayer.Character then
-
-            local Character = OtherPlayer.Character
-            local Highlight =
-                Character:FindFirstChild("MeuHubESP")
-
-            if ESPEnabled then
-
-                if not Highlight then
-
-                    Highlight = Instance.new("Highlight")
-                    Highlight.Name = "MeuHubESP"
-                    Highlight.Adornee = Character
-                    Highlight.DepthMode =
-                        Enum.HighlightDepthMode.AlwaysOnTop
-                    Highlight.FillTransparency = 0.7
-                    Highlight.OutlineTransparency = 0
-                    Highlight.Parent = Character
-
-                end
-
-            elseif Highlight then
-
-                Highlight:Destroy()
-
-            end
-        end
-    end
+	updateButton()
 end
 
-ESPButton.MouseButton1Click:Connect(function()
+teleButton.MouseButton1Click:Connect(toggleTelekinesis)
+ball.MouseButton1Click:Connect(toggleTelekinesis)
 
-    ESPEnabled = not ESPEnabled
+-- =========================
+-- PEGAR OBJETO
+-- =========================
 
-    ESPButton.Text =
-        ESPEnabled
-        and "👁️ ESP: ON"
-        or "👁️ ESP: OFF"
-
-    UpdateESP()
-
+mouse.Button1Down:Connect(function()
+	if telekinesisEnabled then
+		grabObject()
+	end
 end)
 
-Players.PlayerAdded:Connect(function(NewPlayer)
-
-    NewPlayer.CharacterAdded:Connect(function()
-
-        task.wait(0.5)
-        UpdateESP()
-
-    end)
-
+mouse.Button1Up:Connect(function()
+	if telekinesisEnabled then
+		releaseObject()
+	end
 end)
 
 -- =========================
--- VELOCIDADE
--- =========================
-
-SpeedButton.MouseButton1Click:Connect(function()
-
-    Speed += 4
-
-    if Speed > 40 then
-        Speed = 16
-    end
-
-    SpeedButton.Text =
-        "🏃 VELOCIDADE: " .. Speed
-
-    local Character = Player.Character
-
-    if Character then
-
-        local Humanoid =
-            Character:FindFirstChildOfClass("Humanoid")
-
-        if Humanoid then
-            Humanoid.WalkSpeed = Speed
-        end
-    end
-end)
-
--- =========================
--- PULO
--- =========================
-
-JumpButton.MouseButton1Click:Connect(function()
-
-    JumpPower += 10
-
-    if JumpPower > 100 then
-        JumpPower = 50
-    end
-
-    JumpButton.Text =
-        "🦘 PULO: " .. JumpPower
-
-    local Character = Player.Character
-
-    if Character then
-
-        local Humanoid =
-            Character:FindFirstChildOfClass("Humanoid")
-
-        if Humanoid then
-            Humanoid.UseJumpPower = true
-            Humanoid.JumpPower = JumpPower
-        end
-    end
-end)
-
--- =========================
--- FOV
--- =========================
-
-local FOVCircle = Instance.new("Frame")
-
-FOVCircle.Size =
-    UDim2.fromOffset(
-        FOVSize * 2,
-        FOVSize * 2
-    )
-
-FOVCircle.Position =
-    UDim2.fromScale(0.5, 0.5)
-
-FOVCircle.AnchorPoint =
-    Vector2.new(0.5, 0.5)
-
-FOVCircle.BackgroundTransparency = 1
-FOVCircle.Parent = Gui
-
-local FOVCorner = Instance.new("UICorner")
-FOVCorner.CornerRadius = UDim.new(1, 0)
-FOVCorner.Parent = FOVCircle
-
-local FOVStroke = Instance.new("UIStroke")
-FOVStroke.Thickness = 2
-FOVStroke.Parent = FOVCircle
-
-FOVButton.MouseButton1Click:Connect(function()
-
-    FOVSize += 30
-
-    if FOVSize > 240 then
-        FOVSize = 60
-    end
-
-    FOVButton.Text =
-        "⭕ FOV: " .. FOVSize
-
-    FOVCircle.Size =
-        UDim2.fromOffset(
-            FOVSize * 2,
-            FOVSize * 2
-        )
-
-end)
-
--- =========================
--- AUTO KILL NPC
--- =========================
-
-AutoKillButton.MouseButton1Click:Connect(function()
-
-    AutoKillNPC = not AutoKillNPC
-
-    AutoKillButton.Text =
-        AutoKillNPC
-        and "☠️ AUTO KILL NPC: ON"
-        or "☠️ AUTO KILL NPC: OFF"
-
-end)
-
-task.spawn(function()
-
-    while task.wait(0.5) do
-
-        if AutoKillNPC then
-
-            local Folder =
-                workspace:FindFirstChild("TestNPCs")
-
-            if Folder then
-
-                for _, NPC in ipairs(Folder:GetChildren()) do
-
-                    local Humanoid =
-                        NPC:FindFirstChildOfClass("Humanoid")
-
-                    if Humanoid
-                        and Humanoid.Health > 0 then
-
-                        Humanoid.Health = 0
-
-                    end
-                end
-            end
-        end
-    end
-end)
-
--- =========================
--- FECHAR
--- =========================
-
-CloseButton.MouseButton1Click:Connect(function()
-    Gui:Destroy()
-end)
-
--- =========================
--- CONFIGURAÇÕES
--- =========================
-
-local function ApplySettings()
-
-    local Character = Player.Character
-
-    if not Character then
-        return
-    end
-
-    local Humanoid =
-        Character:FindFirstChildOfClass("Humanoid")
-
-    if not Humanoid then
-        return
-    end
-
-    Humanoid.WalkSpeed = Speed
-    Humanoid.UseJumpPower = true
-    Humanoid.JumpPower = JumpPower
-
-end
-
-Player.CharacterAdded:Connect(function()
-
-    task.wait(1)
-    ApplySettings()
-
-end)
-
-ApplySettings()
-
--- =========================
--- FOV FIXO NO CENTRO
+-- MOVIMENTO DO OBJETO
 -- =========================
 
 RunService.RenderStepped:Connect(function()
+	if not holdingObject or not bodyPosition then
+		return
+	end
 
-    if Gui.Parent then
+	if not holdingObject.Parent then
+		releaseObject()
+		return
+	end
 
-        FOVCircle.Position =
-            UDim2.fromScale(0.5, 0.5)
+	local camera = workspace.CurrentCamera
 
-        FOVCircle.AnchorPoint =
-            Vector2.new(0.5, 0.5)
+	if not camera then
+		return
+	end
 
-    end
+	local targetPosition =
+		camera.CFrame.Position +
+		camera.CFrame.LookVector * HOLD_DISTANCE
 
+	bodyPosition.Position = targetPosition
 end)
+
+-- =========================
+-- MOSTRAR / ESCONDER PAINEL
+-- =========================
+
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed then
+		return
+	end
+
+	if input.KeyCode == Enum.KeyCode.RightShift then
+		panel.Visible = not panel.Visible
+	end
+end)
+
+updateButton()
