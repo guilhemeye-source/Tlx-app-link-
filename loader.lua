@@ -1,9 +1,8 @@
 -- AIM ASSIST + ESP
--- Para uso no seu próprio jogo Roblox
+-- Para usar no seu próprio jogo no Roblox Studio
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -12,94 +11,79 @@ local AIM_ENABLED = true
 local ESP_ENABLED = true
 local FOV = 150
 
--- Círculo do FOV
-local circle = Drawing and Drawing.new("Circle")
+-- Criar círculo do FOV na tela
+local gui = Instance.new("ScreenGui")
+gui.Name = "AimAssistGUI"
+gui.ResetOnSpawn = false
+gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
-if circle then
-    circle.Radius = FOV
-    circle.Thickness = 2
-    circle.Filled = false
-    circle.Visible = true
+local circle = Instance.new("Frame")
+circle.Name = "FOV"
+circle.Size = UDim2.fromOffset(FOV * 2, FOV * 2)
+circle.AnchorPoint = Vector2.new(0.5, 0.5)
+circle.BackgroundTransparency = 1
+circle.Parent = gui
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 2
+stroke.Parent = circle
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1, 0)
+corner.Parent = circle
+
+-- FOV fica sempre no centro da tela
+local function updateFOV()
+	local viewport = Camera.ViewportSize
+
+	circle.Position = UDim2.fromOffset(
+		viewport.X / 2,
+		viewport.Y / 2
+	)
+
+	circle.Visible = AIM_ENABLED
 end
 
-local function getClosestPlayer()
-    local closest = nil
-    local shortest = FOV
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-            local head = player.Character:FindFirstChild("Head")
-
-            if humanoid and humanoid.Health > 0 and head then
-                local position, visible =
-                    Camera:WorldToViewportPoint(head.Position)
-
-                if visible then
-                    local mousePos = UserInputService:GetMouseLocation()
-                    local distance =
-                        (Vector2.new(position.X, position.Y) - mousePos).Magnitude
-
-                    if distance < shortest then
-                        shortest = distance
-                        closest = head
-                    end
-                end
-            end
-        end
-    end
-
-    return closest
-end
-
+-- ESP
 local function createESP(player)
-    if not player.Character then return end
+	if player == LocalPlayer then return end
+	if not player.Character then return end
 
-    local highlight = player.Character:FindFirstChild("GameESP")
+	local highlight = player.Character:FindFirstChild("GameESP")
 
-    if not highlight then
-        highlight = Instance.new("Highlight")
-        highlight.Name = "GameESP"
-        highlight.FillTransparency = 0.7
-        highlight.OutlineTransparency = 0
-        highlight.Parent = player.Character
-    end
+	if not highlight then
+		highlight = Instance.new("Highlight")
+		highlight.Name = "GameESP"
+		highlight.FillTransparency = 0.7
+		highlight.OutlineTransparency = 0
+		highlight.Parent = player.Character
+	end
 
-    highlight.Enabled = ESP_ENABLED
+	highlight.Enabled = ESP_ENABLED
 end
 
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        task.wait(1)
-        createESP(player)
-    end)
-end)
+local function setupPlayer(player)
+	if player == LocalPlayer then return end
+
+	player.CharacterAdded:Connect(function()
+		task.wait(1)
+		createESP(player)
+	end)
+
+	if player.Character then
+		createESP(player)
+	end
+end
 
 for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        player.CharacterAdded:Connect(function()
-            task.wait(1)
-            createESP(player)
-        end)
-
-        if player.Character then
-            createESP(player)
-        end
-    end
+	setupPlayer(player)
 end
 
+Players.PlayerAdded:Connect(setupPlayer)
+
+-- Atualização
 RunService.RenderStepped:Connect(function()
-    if circle then
-        circle.Position = UserInputService:GetMouseLocation()
-        circle.Visible = AIM_ENABLED
-    end
-
-    if AIM_ENABLED then
-        local target = getClosestPlayer()
-
-        if target then
-            local cameraPosition = Camera.CFrame.Position
-            Camera.CFrame = CFrame.lookAt(cameraPosition, target.Position)
-        end
-    end
+	updateFOV()
 end)
+
+updateFOV()
