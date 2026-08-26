@@ -1,237 +1,438 @@
--- LOADER + AIM ASSIST + ESP
+--!strict
+-- MEU HUB
 -- Para uso no seu próprio jogo Roblox
+-- Sem KEY
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
 
-local AimEnabled = false
-local ESPEnabled = true
-local FOVRadius = 120
-local Smoothness = 0.15
-local MaxDistance = 500
+-- =========================
+-- CONFIGURAÇÕES
+-- =========================
 
+local Config = {
+    Speed = 16,
+    JumpPower = 50,
+    ESP = false,
+    AimAssist = false,
+    FOV = 120,
+    AutoKillNPC = false
+}
+
+-- =========================
+-- LIMPAR HUB ANTIGO
+-- =========================
+
+local Old = PlayerGui:FindFirstChild("MeuHub")
+
+if Old then
+    Old:Destroy()
+end
+
+-- =========================
 -- GUI
+-- =========================
+
 local Gui = Instance.new("ScreenGui")
-Gui.Name = "AimESP"
+Gui.Name = "MeuHub"
 Gui.ResetOnSpawn = false
-Gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+Gui.Parent = PlayerGui
 
--- FOV FIXO
-local FOV = Instance.new("Frame")
-FOV.Size = UDim2.fromOffset(FOVRadius * 2, FOVRadius * 2)
-FOV.Position = UDim2.fromScale(0.5, 0.5)
-FOV.AnchorPoint = Vector2.new(0.5, 0.5)
-FOV.BackgroundTransparency = 1
-FOV.Parent = Gui
+local Main = Instance.new("Frame")
+Main.Size = UDim2.fromOffset(290, 410)
+Main.Position = UDim2.fromScale(0.5, 0.5)
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+Main.BackgroundTransparency = 0.08
+Main.Parent = Gui
 
-local FOVCorner = Instance.new("UICorner")
-FOVCorner.CornerRadius = UDim.new(1, 0)
-FOVCorner.Parent = FOV
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 16)
+MainCorner.Parent = Main
 
-local FOVStroke = Instance.new("UIStroke")
-FOVStroke.Thickness = 2
-FOVStroke.Parent = FOV
+local Stroke = Instance.new("UIStroke")
+Stroke.Thickness = 2
+Stroke.Parent = Main
 
--- PAINEL
-local Panel = Instance.new("Frame")
-Panel.Size = UDim2.fromOffset(200, 125)
-Panel.Position = UDim2.fromOffset(20, 100)
-Panel.BackgroundTransparency = 0.15
-Panel.Parent = Gui
-
-local PanelCorner = Instance.new("UICorner")
-PanelCorner.CornerRadius = UDim.new(0, 12)
-PanelCorner.Parent = Panel
+-- =========================
+-- TÍTULO
+-- =========================
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Size = UDim2.new(1, -20, 0, 45)
+Title.Position = UDim2.fromOffset(10, 5)
 Title.BackgroundTransparency = 1
-Title.Text = "AIM + ESP"
+Title.Text = "⚡ MEU HUB"
 Title.TextScaled = true
 Title.Font = Enum.Font.GothamBold
-Title.Parent = Panel
+Title.Parent = Main
 
-local AimButton = Instance.new("TextButton")
-AimButton.Size = UDim2.new(1, -20, 0, 32)
-AimButton.Position = UDim2.fromOffset(10, 38)
-AimButton.Text = "AIM: OFF"
-AimButton.TextScaled = true
-AimButton.Font = Enum.Font.GothamBold
-AimButton.Parent = Panel
+-- =========================
+-- FUNÇÃO DOS BOTÕES
+-- =========================
 
-local ESPButton = Instance.new("TextButton")
-ESPButton.Size = UDim2.new(1, -20, 0, 32)
-ESPButton.Position = UDim2.fromOffset(10, 78)
-ESPButton.Text = "ESP: ON"
-ESPButton.TextScaled = true
-ESPButton.Font = Enum.Font.GothamBold
-ESPButton.Parent = Panel
+local function CreateButton(Text, Y)
 
+    local Button = Instance.new("TextButton")
+
+    Button.Size = UDim2.new(1, -30, 0, 40)
+    Button.Position = UDim2.fromOffset(15, Y)
+    Button.BackgroundTransparency = 0.05
+    Button.Text = Text
+    Button.TextScaled = true
+    Button.Font = Enum.Font.GothamBold
+    Button.Parent = Main
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 10)
+    Corner.Parent = Button
+
+    return Button
+end
+
+-- =========================
+-- BOTÕES
+-- =========================
+
+local AimButton =
+    CreateButton("🎯 AIM ASSIST: OFF", 55)
+
+local ESPButton =
+    CreateButton("👁️ ESP: OFF", 105)
+
+local SpeedButton =
+    CreateButton("🏃 VELOCIDADE: 16", 155)
+
+local JumpButton =
+    CreateButton("🦘 PULO: 50", 205)
+
+local FOVButton =
+    CreateButton("⭕ FOV: 120", 255)
+
+local AutoKillButton =
+    CreateButton("☠️ AUTO KILL NPC: OFF", 305)
+
+local CloseButton =
+    CreateButton("✖ FECHAR", 355)
+
+-- =========================
+-- AIM ASSIST
+-- =========================
+
+AimButton.MouseButton1Click:Connect(function()
+
+    Config.AimAssist = not Config.AimAssist
+
+    AimButton.Text =
+        Config.AimAssist
+        and "🎯 AIM ASSIST: ON"
+        or "🎯 AIM ASSIST: OFF"
+
+end)
+
+-- =========================
 -- ESP
-local function AddESP(Player)
-    if Player == LocalPlayer then
-        return
-    end
+-- =========================
 
-    local function Setup(Character)
-        if not ESPEnabled then
-            return
+local function UpdateESP()
+
+    for _, OtherPlayer in ipairs(Players:GetPlayers()) do
+
+        if OtherPlayer ~= Player
+            and OtherPlayer.Character then
+
+            local Character = OtherPlayer.Character
+
+            local Highlight =
+                Character:FindFirstChild("MeuHubESP")
+
+            if Config.ESP then
+
+                if not Highlight then
+
+                    Highlight = Instance.new("Highlight")
+
+                    Highlight.Name =
+                        "MeuHubESP"
+
+                    Highlight.Adornee =
+                        Character
+
+                    Highlight.DepthMode =
+                        Enum.HighlightDepthMode.AlwaysOnTop
+
+                    Highlight.FillTransparency = 0.7
+                    Highlight.OutlineTransparency = 0
+
+                    Highlight.Parent =
+                        Character
+                end
+
+            elseif Highlight then
+
+                Highlight:Destroy()
+
+            end
         end
-
-        local Old = Character:FindFirstChild("PlayerESP")
-        if Old then
-            Old:Destroy()
-        end
-
-        local Highlight = Instance.new("Highlight")
-        Highlight.Name = "PlayerESP"
-        Highlight.Adornee = Character
-        Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-        Highlight.FillTransparency = 0.7
-        Highlight.OutlineTransparency = 0
-        Highlight.Parent = Character
     end
+end
 
-    Player.CharacterAdded:Connect(function(Character)
-        task.wait(0.3)
-        Setup(Character)
+ESPButton.MouseButton1Click:Connect(function()
+
+    Config.ESP = not Config.ESP
+
+    ESPButton.Text =
+        Config.ESP
+        and "👁️ ESP: ON"
+        or "👁️ ESP: OFF"
+
+    UpdateESP()
+
+end)
+
+Players.PlayerAdded:Connect(function(NewPlayer)
+
+    NewPlayer.CharacterAdded:Connect(function()
+
+        task.wait(0.5)
+
+        UpdateESP()
+
     end)
 
-    if Player.Character then
-        Setup(Player.Character)
+end)
+
+-- =========================
+-- VELOCIDADE
+-- =========================
+
+SpeedButton.MouseButton1Click:Connect(function()
+
+    Config.Speed += 4
+
+    if Config.Speed > 40 then
+        Config.Speed = 16
     end
-end
 
-for _, Player in ipairs(Players:GetPlayers()) do
-    AddESP(Player)
-end
+    SpeedButton.Text =
+        "🏃 VELOCIDADE: " .. Config.Speed
 
-Players.PlayerAdded:Connect(AddESP)
+    local Character =
+        Player.Character
 
--- PEGAR ALVO MAIS PRÓXIMO DO CENTRO
-local function GetTarget()
-    local Target = nil
-    local Closest = FOVRadius
+    if Character then
 
-    local Center = Vector2.new(
-        Camera.ViewportSize.X / 2,
-        Camera.ViewportSize.Y / 2
+        local Humanoid =
+            Character:FindFirstChildOfClass("Humanoid")
+
+        if Humanoid then
+            Humanoid.WalkSpeed =
+                Config.Speed
+        end
+    end
+end)
+
+-- =========================
+-- PULO
+-- =========================
+
+JumpButton.MouseButton1Click:Connect(function()
+
+    Config.JumpPower += 10
+
+    if Config.JumpPower > 100 then
+        Config.JumpPower = 50
+    end
+
+    JumpButton.Text =
+        "🦘 PULO: " .. Config.JumpPower
+
+    local Character =
+        Player.Character
+
+    if Character then
+
+        local Humanoid =
+            Character:FindFirstChildOfClass("Humanoid")
+
+        if Humanoid then
+
+            Humanoid.UseJumpPower = true
+            Humanoid.JumpPower =
+                Config.JumpPower
+
+        end
+    end
+end)
+
+-- =========================
+-- FOV
+-- =========================
+
+local FOVCircle = Instance.new("Frame")
+
+FOVCircle.Size =
+    UDim2.fromOffset(
+        Config.FOV * 2,
+        Config.FOV * 2
     )
 
-    for _, Player in ipairs(Players:GetPlayers()) do
-        if Player ~= LocalPlayer and Player.Character then
+FOVCircle.Position =
+    UDim2.fromScale(0.5, 0.5)
 
-            local Character = Player.Character
-            local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-            local Head = Character:FindFirstChild("Head")
+FOVCircle.AnchorPoint =
+    Vector2.new(0.5, 0.5)
 
-            if Humanoid and Head and Humanoid.Health > 0 then
+FOVCircle.BackgroundTransparency = 1
+FOVCircle.Visible = false
+FOVCircle.Parent = Gui
 
-                local Position, Visible =
-                    Camera:WorldToViewportPoint(Head.Position)
+local FOVCorner = Instance.new("UICorner")
 
-                if Visible then
+FOVCorner.CornerRadius =
+    UDim.new(1, 0)
 
-                    local ScreenPosition =
-                        Vector2.new(Position.X, Position.Y)
+FOVCorner.Parent =
+    FOVCircle
 
-                    local ScreenDistance =
-                        (ScreenPosition - Center).Magnitude
+local FOVStroke = Instance.new("UIStroke")
 
-                    local Distance =
-                        (Camera.CFrame.Position - Head.Position).Magnitude
+FOVStroke.Thickness = 2
+FOVStroke.Parent = FOVCircle
 
-                    if ScreenDistance < Closest
-                        and Distance <= MaxDistance then
+FOVButton.MouseButton1Click:Connect(function()
 
-                        Closest = ScreenDistance
-                        Target = Head
+    Config.FOV += 30
+
+    if Config.FOV > 240 then
+        Config.FOV = 60
+    end
+
+    FOVButton.Text =
+        "⭕ FOV: " .. Config.FOV
+
+    FOVCircle.Size =
+        UDim2.fromOffset(
+            Config.FOV * 2,
+            Config.FOV * 2
+        )
+end)
+
+-- =========================
+-- AUTO KILL NPC
+-- =========================
+
+AutoKillButton.MouseButton1Click:Connect(function()
+
+    Config.AutoKillNPC =
+        not Config.AutoKillNPC
+
+    AutoKillButton.Text =
+        Config.AutoKillNPC
+        and "☠️ AUTO KILL NPC: ON"
+        or "☠️ AUTO KILL NPC: OFF"
+
+end)
+
+task.spawn(function()
+
+    while task.wait(0.5) do
+
+        if Config.AutoKillNPC then
+
+            local NPCFolder =
+                workspace:FindFirstChild("NPCs")
+
+            if NPCFolder then
+
+                for _, NPC in ipairs(
+                    NPCFolder:GetChildren()
+                ) do
+
+                    local Humanoid =
+                        NPC:FindFirstChildOfClass(
+                            "Humanoid"
+                        )
+
+                    if Humanoid
+                        and Humanoid.Health > 0 then
+
+                        Humanoid.Health = 0
+
                     end
                 end
             end
         end
     end
+end)
 
-    return Target
-end
+-- =========================
+-- FECHAR
+-- =========================
 
--- AIM
-RunService.RenderStepped:Connect(function()
+CloseButton.MouseButton1Click:Connect(function()
 
-    if not AimEnabled then
+    Gui:Destroy()
+
+end)
+
+-- =========================
+-- APLICAR CONFIGURAÇÕES
+-- =========================
+
+local function ApplySettings()
+
+    local Character =
+        Player.Character
+
+    if not Character then
         return
     end
 
-    local Target = GetTarget()
-
-    if Target then
-
-        local LookAt = CFrame.lookAt(
-            Camera.CFrame.Position,
-            Target.Position
+    local Humanoid =
+        Character:FindFirstChildOfClass(
+            "Humanoid"
         )
 
-        Camera.CFrame =
-            Camera.CFrame:Lerp(LookAt, Smoothness)
-    end
-end)
-
--- BOTÃO AIM
-AimButton.MouseButton1Click:Connect(function()
-
-    AimEnabled = not AimEnabled
-
-    if AimEnabled then
-        AimButton.Text = "AIM: ON"
-    else
-        AimButton.Text = "AIM: OFF"
-    end
-end)
-
--- BOTÃO ESP
-ESPButton.MouseButton1Click:Connect(function()
-
-    ESPEnabled = not ESPEnabled
-
-    ESPButton.Text =
-        ESPEnabled and "ESP: ON" or "ESP: OFF"
-
-    for _, Player in ipairs(Players:GetPlayers()) do
-
-        if Player.Character then
-
-            local ESP =
-                Player.Character:FindFirstChild("PlayerESP")
-
-            if ESPEnabled then
-
-                if not ESP and Player ~= LocalPlayer then
-                    AddESP(Player)
-                end
-
-            elseif ESP then
-                ESP:Destroy()
-            end
-        end
-    end
-end)
-
--- TECLA Q
-UserInputService.InputBegan:Connect(function(Input, Processed)
-
-    if Processed then
+    if not Humanoid then
         return
     end
 
-    if Input.KeyCode == Enum.KeyCode.Q then
+    Humanoid.WalkSpeed =
+        Config.Speed
 
-        AimEnabled = not AimEnabled
+    Humanoid.UseJumpPower = true
 
-        AimButton.Text =
-            AimEnabled and "AIM: ON" or "AIM: OFF"
+    Humanoid.JumpPower =
+        Config.JumpPower
+
+end
+
+Player.CharacterAdded:Connect(function()
+
+    task.wait(1)
+
+    ApplySettings()
+
+end)
+
+ApplySettings()
+
+-- =========================
+-- FOV NO CENTRO
+-- =========================
+
+RunService.RenderStepped:Connect(function()
+
+    if Gui.Parent then
+
+        FOVCircle.Position =
+            UDim2.fromScale(0.5, 0.5)
+
+        FOVCircle.AnchorPoint =
+            Vector2.new(0.5, 0.5)
+
     end
 end)
