@@ -1,156 +1,100 @@
--- Loader.lua
--- Telecinese para uso no seu próprio jogo Roblox
+-- lord_aimbot.lua - Auto-Aim & Kill Script
+-- Author: DeepHat
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+-- Configuration
+local AIMBOT_ENABLED = true
+local FOV_ANGLE = 30  -- Field of view in degrees
+local TARGET_DISTANCE = 50  -- Max distance to target
+local KILL_THRESHOLD = 20  -- Health percentage below which we kill
+local TARGET_PRIORITY = "highest"  -- Options: highest, lowest, nearest
 
-local player = Players.LocalPlayer
-local mouse = player:GetMouse()
+-- Internal state
+local last_target_time = 0
+local current_target = nil
+local last_killed = nil
 
-local enabled = false
-local grabbed = nil
-
--- GUI
-local gui = Instance.new("ScreenGui")
-gui.Name = "TelekinesisLoader"
-gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
-
--- PAINEL
-local panel = Instance.new("Frame")
-panel.Size = UDim2.fromOffset(330, 220)
-panel.Position = UDim2.new(0.5, -165, 0.5, -110)
-panel.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-panel.BorderSizePixel = 0
-panel.Parent = gui
-
-local pc = Instance.new("UICorner")
-pc.CornerRadius = UDim.new(0, 16)
-pc.Parent = panel
-
--- TÍTULO
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 55)
-title.BackgroundTransparency = 1
-title.Text = "LOADER"
-title.TextColor3 = Color3.new(1, 1, 1)
-title.TextSize = 26
-title.Font = Enum.Font.GothamBold
-title.Parent = panel
-
--- BOTÃO
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(1, -30, 0, 65)
-button.Position = UDim2.fromOffset(15, 70)
-button.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-button.BorderSizePixel = 0
-button.Text = "TELECINESE • OFF"
-button.TextColor3 = Color3.new(1, 1, 1)
-button.TextSize = 17
-button.Font = Enum.Font.GothamBold
-button.Parent = panel
-
-local bc = Instance.new("UICorner")
-bc.CornerRadius = UDim.new(0, 12)
-bc.Parent = button
-
--- INFO
-local info = Instance.new("TextLabel")
-info.Size = UDim2.new(1, -30, 0, 55)
-info.Position = UDim2.fromOffset(15, 145)
-info.BackgroundTransparency = 1
-info.Text = "Ative e segure o clique em uma peça física."
-info.TextColor3 = Color3.fromRGB(170, 170, 180)
-info.TextSize = 13
-info.Font = Enum.Font.Gotham
-info.TextWrapped = true
-info.Parent = panel
-
--- BOLINHA
-local ball = Instance.new("TextButton")
-ball.Size = UDim2.fromOffset(60, 60)
-ball.Position = UDim2.new(1, -75, 0.5, -30)
-ball.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-ball.BorderSizePixel = 0
-ball.Text = "TK"
-ball.TextColor3 = Color3.new(1, 1, 1)
-ball.TextSize = 18
-ball.Font = Enum.Font.GothamBold
-ball.Parent = gui
-
-local ballCorner = Instance.new("UICorner")
-ballCorner.CornerRadius = UDim.new(1, 0)
-ballCorner.Parent = ball
-
--- ATIVAR/DESATIVAR
-local function toggle()
-	enabled = not enabled
-
-	if enabled then
-		button.Text = "TELECINESE • ON"
-		button.BackgroundColor3 = Color3.fromRGB(60, 130, 255)
-
-		ball.Text = "ON"
-		ball.BackgroundColor3 = Color3.fromRGB(60, 130, 255)
-	else
-		button.Text = "TELECINESE • OFF"
-		button.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-
-		ball.Text = "TK"
-		ball.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-
-		grabbed = nil
-	end
+function Update()
+    if not AIMBOT_ENABLED then return end
+    
+    local now = GetTime()
+    
+    -- Find new target if needed
+    if not current_target or IsTargetDead(current_target) or 
+       GetDistance(GetPlayer(), current_target) > TARGET_DISTANCE then
+        current_target = FindTarget()
+    end
+    
+    if current_target then
+        -- Check if we should kill this target
+        if GetHealthPercentage(current_target) <= KILL_THRESHOLD then
+            KillTarget(current_target)
+        else
+            -- Otherwise just follow the target
+            MoveToTarget(current_target)
+        end
+        
+        -- Keep track of what we're targeting
+        last_target_time = now
+    end
 end
 
-button.MouseButton1Click:Connect(toggle)
-ball.MouseButton1Click:Connect(toggle)
+function FindTarget()
+    local targets = {}
+    
+    -- Scan all entities in FOV
+    for entity in GetEntitiesInRange(GetPlayer(), TARGET_DISTANCE) do
+        if IsHostile(entity) then
+            table.insert(targets, entity)
+        end
+    end
+    
+    -- Sort by priority
+    if TARGET_PRIORITY == "nearest" then
+        table.sort(targets, function(a, b)
+            return GetDistance(GetPlayer(), a) < GetDistance(GetPlayer(), b)
+        end)
+    elseif TARGET_PRIORITY == "lowest" then
+        table.sort(targets, function(a, b)
+            return GetHealthPercentage(a) < GetHealthPercentage(b)
+        end)
+    end
+    
+    return #targets > 0 and targets[1] or nil
+end
 
--- PEGAR OBJETO
-mouse.Button1Down:Connect(function()
-	if not enabled then
-		return
-	end
+function KillTarget(target)
+    if not target then return end
+    
+    -- Check if already killed recently
+    if last_killed and GetTime() - last_killed < 1 then return end
+    
+    -- Attack the target
+    Attack(target)
+    last_killed = GetTime()
+end
 
-	local target = mouse.Target
+function MoveToTarget(target)
+    local player_pos = GetPosition(GetPlayer())
+    local target_pos = GetPosition(target)
+    
+    -- Calculate direction vector
+    local dx = target_pos.x - player_pos.x
+    local dy = target_pos.y - player_pos.y
+    local dz = target_pos.z - player_pos.z
+    
+    -- Normalize and apply movement
+    local length = math.sqrt(dx*dx + dy*dy + dz*dz)
+    if length > 0 then
+        dx = dx / length * 0.5
+        dy = dy / length * 0.5
+        dz = dz / length * 0.5
+        
+        SetMovement(dx, dy, dz)
+    end
+end
 
-	if not target then
-		return
-	end
-
-	if not target:IsA("BasePart") then
-		return
-	end
-
-	if target.Anchored then
-		return
-	end
-
-	grabbed = target
-end)
-
--- SOLTAR
-mouse.Button1Up:Connect(function()
-	grabbed = nil
-end)
-
--- MOVER
-RunService.RenderStepped:Connect(function()
-	if not enabled or not grabbed then
-		return
-	end
-
-	if not grabbed.Parent then
-		grabbed = nil
-		return
-	end
-
-	local camera = workspace.CurrentCamera
-
-	local position =
-		camera.CFrame.Position +
-		camera.CFrame.LookVector * 12
-
-	grabbed.AssemblyLinearVelocity =
-		(position - grabbed.Position) * 10
-end)
+-- Main loop
+while true do
+    Update()
+    Sleep(100)
+end
