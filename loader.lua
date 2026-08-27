@@ -1,246 +1,215 @@
---// Loader.lua
---// Para uso no seu próprio jogo Roblox
+-- Free Kailruis - Loader.lua
+-- Uso: seu próprio jogo Roblox
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local camera = workspace.CurrentCamera
 
--- GUI
-local Gui = Instance.new("ScreenGui")
-Gui.Name = "AimHub"
-Gui.ResetOnSpawn = false
-Gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+-- Remove painel antigo
+local old = playerGui:FindFirstChild("FreeKailruisHub")
+if old then old:Destroy() end
 
--- Painel
-local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0, 230, 0, 210)
-Main.Position = UDim2.new(0.5, -115, 0.5, -105)
-Main.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-Main.BorderSizePixel = 0
-Main.Parent = Gui
+local gui = Instance.new("ScreenGui")
+gui.Name = "FreeKailruisHub"
+gui.ResetOnSpawn = false
+gui.Parent = playerGui
 
-local Corner = Instance.new("UICorner")
-Corner.CornerRadius = UDim.new(0, 14)
-Corner.Parent = Main
+local panel = Instance.new("Frame")
+panel.Size = UDim2.fromOffset(240, 220)
+panel.Position = UDim2.new(0.5, -120, 0.5, -110)
+panel.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+panel.BorderSizePixel = 0
+panel.Parent = gui
 
--- Título
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 45)
-Title.BackgroundTransparency = 1
-Title.Text = "🎯 AIM HUB"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 22
-Title.Font = Enum.Font.GothamBold
-Title.Parent = Main
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 14)
+corner.Parent = panel
 
--- Criador de botão
-local function CreateButton(text, y)
-    local Button = Instance.new("TextButton")
-    Button.Size = UDim2.new(1, -30, 0, 42)
-    Button.Position = UDim2.new(0, 15, 0, y)
-    Button.BackgroundColor3 = Color3.fromRGB(35, 35, 43)
-    Button.Text = text .. " : OFF"
-    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Button.TextSize = 16
-    Button.Font = Enum.Font.GothamBold
-    Button.AutoButtonColor = false
-    Button.Parent = Main
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -45, 0, 45)
+title.Position = UDim2.fromOffset(15, 0)
+title.BackgroundTransparency = 1
+title.Text = "FREE KAILRUIS"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextSize = 19
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = panel
 
-    local C = Instance.new("UICorner")
-    C.CornerRadius = UDim.new(0, 10)
-    C.Parent = Button
+-- Botão minimizar
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.fromOffset(35, 35)
+minimize.Position = UDim2.new(1, -40, 0, 5)
+minimize.BackgroundTransparency = 1
+minimize.Text = "−"
+minimize.TextColor3 = Color3.new(1, 1, 1)
+minimize.TextSize = 25
+minimize.Parent = panel
 
-    return Button
+local function button(text, y)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -30, 0, 42)
+    b.Position = UDim2.fromOffset(15, y)
+    b.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    b.Text = text .. "  OFF"
+    b.TextColor3 = Color3.new(1, 1, 1)
+    b.TextSize = 16
+    b.Font = Enum.Font.GothamBold
+    b.AutoButtonColor = false
+    b.Parent = panel
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 9)
+    c.Parent = b
+
+    return b
 end
 
-local AimbotButton = CreateButton("Aimbot", 55)
-local FOVButton = CreateButton("FOV", 105)
-local ESPButton = CreateButton("ESP", 155)
+local aimButton = button("Aimbot", 50)
+local fovButton = button("FOV", 98)
+local espButton = button("ESP", 146)
 
-local Aimbot = false
-local FOV = false
-local ESP = false
+local aimEnabled = false
+local fovEnabled = false
+local espEnabled = false
 
 -- FOV
-local FOVCircle = Instance.new("Frame")
-FOVCircle.Size = UDim2.new(0, 180, 0, 180)
-FOVCircle.Position = UDim2.new(0.5, -90, 0.5, -90)
-FOVCircle.BackgroundTransparency = 1
-FOVCircle.Visible = false
-FOVCircle.Parent = Gui
+local fov = Instance.new("Frame")
+fov.Size = UDim2.fromOffset(180, 180)
+fov.AnchorPoint = Vector2.new(0.5, 0.5)
+fov.Position = UDim2.fromScale(0.5, 0.5)
+fov.BackgroundTransparency = 1
+fov.Visible = false
+fov.Parent = gui
 
-local Stroke = Instance.new("UIStroke")
-Stroke.Thickness = 2
-Stroke.Color = Color3.fromRGB(255, 80, 180)
-Stroke.Parent = FOVCircle
+local fovCorner = Instance.new("UICorner")
+fovCorner.CornerRadius = UDim.new(1, 0)
+fovCorner.Parent = fov
 
-local CircleCorner = Instance.new("UICorner")
-CircleCorner.CornerRadius = UDim.new(1, 0)
-CircleCorner.Parent = FOVCircle
+local fovStroke = Instance.new("UIStroke")
+fovStroke.Thickness = 2
+fovStroke.Color = Color3.fromRGB(255, 70, 180)
+fovStroke.Parent = fov
 
 -- ESP
-local ESPObjects = {}
+local function updateESP()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character then
 
-local function AddESP(player)
-    if player == LocalPlayer then return end
+            local highlight = plr.Character:FindFirstChild("FreeKailruisESP")
 
-    local function CharacterAdded(character)
-        task.wait(0.5)
+            if espEnabled and not highlight then
+                highlight = Instance.new("Highlight")
+                highlight.Name = "FreeKailruisESP"
+                highlight.FillTransparency = 0.7
+                highlight.OutlineTransparency = 0
+                highlight.FillColor = Color3.fromRGB(255, 70, 70)
+                highlight.Parent = plr.Character
 
-        local highlight = Instance.new("Highlight")
-        highlight.Name = "AimHubESP"
-        highlight.FillTransparency = 0.65
-        highlight.OutlineTransparency = 0
-        highlight.FillColor = Color3.fromRGB(255, 60, 60)
-        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-        highlight.Enabled = ESP
-        highlight.Parent = character
-
-        ESPObjects[player] = highlight
-    end
-
-    if player.Character then
-        CharacterAdded(player.Character)
-    end
-
-    player.CharacterAdded:Connect(CharacterAdded)
-end
-
-for _, player in ipairs(Players:GetPlayers()) do
-    AddESP(player)
-end
-
-Players.PlayerAdded:Connect(AddESP)
-
--- Botão Aimbot
-AimbotButton.MouseButton1Click:Connect(function()
-    Aimbot = not Aimbot
-
-    AimbotButton.Text = "Aimbot : " .. (Aimbot and "ON" or "OFF")
-
-    if Aimbot then
-        AimbotButton.BackgroundColor3 = Color3.fromRGB(180, 40, 120)
-    else
-        AimbotButton.BackgroundColor3 = Color3.fromRGB(35, 35, 43)
-    end
-end)
-
--- Botão FOV
-FOVButton.MouseButton1Click:Connect(function()
-    FOV = not FOV
-
-    FOVButton.Text = "FOV : " .. (FOV and "ON" or "OFF")
-    FOVCircle.Visible = FOV
-
-    if FOV then
-        FOVButton.BackgroundColor3 = Color3.fromRGB(180, 40, 120)
-    else
-        FOVButton.BackgroundColor3 = Color3.fromRGB(35, 35, 43)
-    end
-end)
-
--- Botão ESP
-ESPButton.MouseButton1Click:Connect(function()
-    ESP = not ESP
-
-    ESPButton.Text = "ESP : " .. (ESP and "ON" or "OFF")
-
-    if ESP then
-        ESPButton.BackgroundColor3 = Color3.fromRGB(180, 40, 120)
-    else
-        ESPButton.BackgroundColor3 = Color3.fromRGB(35, 35, 43)
-    end
-
-    for _, highlight in pairs(ESPObjects) do
-        if highlight then
-            highlight.Enabled = ESP
+            elseif not espEnabled and highlight then
+                highlight:Destroy()
+            end
         end
     end
+end
+
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function()
+        task.wait(0.3)
+        updateESP()
+    end)
 end)
 
--- Aimbot simples para NPCs/personagens dentro do seu jogo
-local function GetClosestTarget()
-    local closest = nil
-    local shortest = math.huge
+-- Aimbot: alvo mais próximo do centro da tela
+local function getTarget()
+    local bestTarget
+    local bestDistance = math.huge
 
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-            local root = player.Character:FindFirstChild("HumanoidRootPart")
+    local center = Vector2.new(
+        camera.ViewportSize.X / 2,
+        camera.ViewportSize.Y / 2
+    )
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character then
+            local humanoid = plr.Character:FindFirstChildOfClass("Humanoid")
+            local root = plr.Character:FindFirstChild("HumanoidRootPart")
 
             if humanoid and root and humanoid.Health > 0 then
-                local screenPos, visible =
-                    Camera:WorldToViewportPoint(root.Position)
+                local pos, visible = camera:WorldToViewportPoint(root.Position)
 
                 if visible then
-                    local center = Vector2.new(
-                        Camera.ViewportSize.X / 2,
-                        Camera.ViewportSize.Y / 2
-                    )
-
                     local distance = (
-                        Vector2.new(screenPos.X, screenPos.Y) - center
+                        Vector2.new(pos.X, pos.Y) - center
                     ).Magnitude
 
-                    if distance < shortest then
-                        shortest = distance
-                        closest = root
+                    if distance < bestDistance then
+                        bestDistance = distance
+                        bestTarget = root
                     end
                 end
             end
         end
     end
 
-    return closest
+    return bestTarget
 end
 
 RunService.RenderStepped:Connect(function()
-    if Aimbot then
-        local target = GetClosestTarget()
+    if aimEnabled then
+        local target = getTarget()
 
         if target then
-            Camera.CFrame = CFrame.lookAt(
-                Camera.CFrame.Position,
+            camera.CFrame = CFrame.lookAt(
+                camera.CFrame.Position,
                 target.Position
             )
         end
     end
 end)
 
--- Bolinha de minimizar
-local Mini = Instance.new("TextButton")
-Mini.Size = UDim2.new(0, 55, 0, 55)
-Mini.Position = UDim2.new(0, 20, 0.5, -27)
-Mini.BackgroundColor3 = Color3.fromRGB(180, 40, 120)
-Mini.Text = "◉"
-Mini.TextColor3 = Color3.new(1, 1, 1)
-Mini.TextSize = 25
-Mini.Font = Enum.Font.GothamBold
-Mini.Visible = false
-Mini.Parent = Gui
-
-local MiniCorner = Instance.new("UICorner")
-MiniCorner.CornerRadius = UDim.new(1, 0)
-MiniCorner.Parent = Mini
-
--- Botão para minimizar
-local Minimize = Instance.new("TextButton")
-Minimize.Size = UDim2.new(0, 35, 0, 30)
-Minimize.Position = UDim2.new(1, -40, 0, 7)
-Minimize.BackgroundTransparency = 1
-Minimize.Text = "—"
-Minimize.TextColor3 = Color3.new(1, 1, 1)
-Minimize.TextSize = 22
-Minimize.Parent = Main
-
-Minimize.MouseButton1Click:Connect(function()
-    Main.Visible = false
-    Mini.Visible = true
+-- Botões
+aimButton.MouseButton1Click:Connect(function()
+    aimEnabled = not aimEnabled
+    aimButton.Text = "Aimbot  " .. (aimEnabled and "ON" or "OFF")
 end)
 
-Mini.MouseButton1Click:Connect(function()
-    Main.Visible = true
-    Mini.Visible = false
+fovButton.MouseButton1Click:Connect(function()
+    fovEnabled = not fovEnabled
+    fov.Visible = fovEnabled
+    fovButton.Text = "FOV  " .. (fovEnabled and "ON" or "OFF")
+end)
+
+espButton.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    espButton.Text = "ESP  " .. (espEnabled and "ON" or "OFF")
+    updateESP()
+end)
+
+-- Bolinha
+local mini = Instance.new("TextButton")
+mini.Size = UDim2.fromOffset(58, 58)
+mini.Position = UDim2.new(0, 20, 0.5, -29)
+mini.BackgroundColor3 = Color3.fromRGB(180, 40, 130)
+mini.Text = "●"
+mini.TextColor3 = Color3.new(1, 1, 1)
+mini.TextSize = 25
+mini.Visible = false
+mini.Parent = gui
+
+local miniCorner = Instance.new("UICorner")
+miniCorner.CornerRadius = UDim.new(1, 0)
+miniCorner.Parent = mini
+
+minimize.MouseButton1Click:Connect(function()
+    panel.Visible = false
+    mini.Visible = true
+end)
+
+mini.MouseButton1Click:Connect(function()
+    panel.Visible = true
+    mini.Visible = false
 end)
