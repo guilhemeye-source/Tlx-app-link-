@@ -1,27 +1,17 @@
---// TLX SCRIPT MM2
---// Roblox Studio - sistema de teste para sua própria experiência
+--// TLX MM2 COPY HUB
+--// Para sua própria cópia no Roblox Studio
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
 local KEY = "Rlltxw"
 
 local ESP_ENABLED = true
-local NOCLIP_ENABLED = false
-local INFJUMP_ENABLED = false
-local AIM_ENABLED = false
-local AIM_FOV = 120
-
 local ESP = {}
-local noclipConnection
-local aimConnection
 
 --==================================================
--- ESP DE ROLES
+-- DETECTAR PAPEL PELA ARMA/FACA
 --==================================================
 
 local function getRole(player)
@@ -30,7 +20,9 @@ local function getRole(player)
     if backpack then
         if backpack:FindFirstChild("Knife") then
             return "Murderer"
-        elseif backpack:FindFirstChild("Gun") then
+        end
+
+        if backpack:FindFirstChild("Gun") then
             return "Sheriff"
         end
     end
@@ -40,7 +32,9 @@ local function getRole(player)
     if character then
         if character:FindFirstChild("Knife") then
             return "Murderer"
-        elseif character:FindFirstChild("Gun") then
+        end
+
+        if character:FindFirstChild("Gun") then
             return "Sheriff"
         end
     end
@@ -48,17 +42,31 @@ local function getRole(player)
     return "Unknown"
 end
 
+--==================================================
+-- REMOVER ESP
+--==================================================
+
 local function removeESP(player)
     if ESP[player] then
-        ESP[player]:Destroy()
+        if ESP[player].Parent then
+            ESP[player]:Destroy()
+        end
+
         ESP[player] = nil
     end
 end
 
+--==================================================
+-- ATUALIZAR ESP
+--==================================================
+
 local function updateESP(player)
-    if player == LocalPlayer then return end
+    if player == LocalPlayer then
+        return
+    end
 
     local character = player.Character
+
     if not character then
         removeESP(player)
         return
@@ -73,54 +81,118 @@ local function updateESP(player)
 
     local highlight = ESP[player]
 
-    if not highlight then
+    -- Se mudou de personagem, cria um Highlight novo
+    if not highlight or highlight.Parent ~= character then
+
+        if highlight then
+            highlight:Destroy()
+        end
+
         highlight = Instance.new("Highlight")
         highlight.Name = "TLXRoleESP"
         highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
         highlight.FillTransparency = 0.45
         highlight.OutlineTransparency = 0
         highlight.Parent = character
+
         ESP[player] = highlight
     end
 
     local role = getRole(player)
 
     if role == "Murderer" then
+
         highlight.Enabled = true
         highlight.FillColor = Color3.fromRGB(255, 0, 0)
         highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
 
     elseif role == "Sheriff" then
+
         highlight.Enabled = true
         highlight.FillColor = Color3.fromRGB(0, 120, 255)
         highlight.OutlineColor = Color3.fromRGB(0, 120, 255)
 
     else
+
         highlight.Enabled = false
+
     end
 end
 
+--==================================================
+-- LOOP DO ESP
+--==================================================
+
 task.spawn(function()
     while task.wait(0.2) do
+
         for _, player in ipairs(Players:GetPlayers()) do
             updateESP(player)
         end
+
     end
 end)
 
-Players.PlayerRemoving:Connect(removeESP)
+--==================================================
+-- PLAYER REMOVING
+--==================================================
+
+Players.PlayerRemoving:Connect(function(player)
+    removeESP(player)
+end)
 
 --==================================================
--- KEY
+-- PLAYER ADDED
+--==================================================
+
+local function setupPlayer(player)
+
+    if player == LocalPlayer then
+        return
+    end
+
+    player.CharacterAdded:Connect(function(character)
+
+        -- Remove o Highlight antigo
+        removeESP(player)
+
+        -- Espera o personagem carregar
+        task.wait(0.5)
+
+        updateESP(player)
+
+    end)
+
+    player.CharacterRemoving:Connect(function()
+        removeESP(player)
+    end)
+
+    -- Caso o personagem já exista
+    if player.Character then
+        task.spawn(function()
+            task.wait(0.5)
+            updateESP(player)
+        end)
+    end
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
+    setupPlayer(player)
+end
+
+Players.PlayerAdded:Connect(setupPlayer)
+
+--==================================================
+-- KEY GUI
 --==================================================
 
 local KeyGui = Instance.new("ScreenGui")
 KeyGui.Name = "TLXKey"
 KeyGui.ResetOnSpawn = false
-KeyGui.Parent = PlayerGui
+KeyGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local KeyFrame = Instance.new("Frame")
-KeyFrame.Size = UDim2.fromOffset(300, 175)
+KeyFrame.Size = UDim2.fromOffset(300, 170)
 KeyFrame.Position = UDim2.fromScale(0.5, 0.5)
 KeyFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 KeyFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
@@ -131,10 +203,10 @@ Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 12)
 local KeyTitle = Instance.new("TextLabel")
 KeyTitle.Size = UDim2.new(1, 0, 0, 45)
 KeyTitle.BackgroundTransparency = 1
-KeyTitle.Text = "TLX SCRIPT MM2"
+KeyTitle.Text = "TLX HUB"
 KeyTitle.TextColor3 = Color3.fromRGB(255, 70, 180)
 KeyTitle.Font = Enum.Font.GothamBold
-KeyTitle.TextSize = 21
+KeyTitle.TextSize = 22
 KeyTitle.Parent = KeyFrame
 
 local KeyBox = Instance.new("TextBox")
@@ -163,26 +235,32 @@ Enter.Parent = KeyFrame
 Instance.new("UICorner", Enter).CornerRadius = UDim.new(0, 8)
 
 --==================================================
--- HUB
+-- ABRIR HUB
 --==================================================
 
 Enter.MouseButton1Click:Connect(function()
 
     if KeyBox.Text ~= KEY then
+
         KeyBox.Text = ""
         KeyBox.PlaceholderText = "Key incorreta!"
+
         return
     end
 
     KeyGui:Destroy()
 
+    --==================================================
+    -- HUB
+    --==================================================
+
     local Gui = Instance.new("ScreenGui")
-    Gui.Name = "TLXScriptMM2"
+    Gui.Name = "TLXHub"
     Gui.ResetOnSpawn = false
-    Gui.Parent = PlayerGui
+    Gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
     local Main = Instance.new("Frame")
-    Main.Size = UDim2.fromOffset(340, 390)
+    Main.Size = UDim2.fromOffset(320, 230)
     Main.Position = UDim2.fromScale(0.5, 0.5)
     Main.AnchorPoint = Vector2.new(0.5, 0.5)
     Main.BackgroundColor3 = Color3.fromRGB(17, 17, 24)
@@ -196,7 +274,7 @@ Enter.MouseButton1Click:Connect(function()
     Stroke.Parent = Main
 
     --==================================================
-    -- ARRASTAR
+    -- ARRASTAR PAINEL
     --==================================================
 
     local dragging = false
@@ -204,6 +282,7 @@ Enter.MouseButton1Click:Connect(function()
     local startPosition
 
     Main.InputBegan:Connect(function(input)
+
         if input.UserInputType == Enum.UserInputType.MouseButton1
         or input.UserInputType == Enum.UserInputType.Touch then
 
@@ -212,17 +291,23 @@ Enter.MouseButton1Click:Connect(function()
             startPosition = Main.Position
 
             input.Changed:Connect(function()
+
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
                 end
+
             end)
+
         end
     end)
 
     UserInputService.InputChanged:Connect(function(input)
+
         if dragging and
-        (input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch) then
+        (
+            input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch
+        ) then
 
             local delta = input.Position - dragStart
 
@@ -232,7 +317,9 @@ Enter.MouseButton1Click:Connect(function()
                 startPosition.Y.Scale,
                 startPosition.Y.Offset + delta.Y
             )
+
         end
+
     end)
 
     --==================================================
@@ -243,7 +330,7 @@ Enter.MouseButton1Click:Connect(function()
     Title.Size = UDim2.new(1, -55, 0, 50)
     Title.Position = UDim2.fromOffset(15, 5)
     Title.BackgroundTransparency = 1
-    Title.Text = "TLX SCRIPT MM2"
+    Title.Text = "TLX MM2 HUB"
     Title.TextColor3 = Color3.fromRGB(255, 70, 180)
     Title.Font = Enum.Font.GothamBold
     Title.TextSize = 21
@@ -251,7 +338,7 @@ Enter.MouseButton1Click:Connect(function()
     Title.Parent = Main
 
     --==================================================
-    -- FECHAR / ABRIR
+    -- FECHAR
     --==================================================
 
     local Close = Instance.new("TextButton")
@@ -265,18 +352,25 @@ Enter.MouseButton1Click:Connect(function()
 
     Instance.new("UICorner", Close).CornerRadius = UDim.new(0, 8)
 
+    --==================================================
+    -- BOTÃO FLUTUANTE
+    --==================================================
+
     local Open = Instance.new("TextButton")
-    Open.Size = UDim2.fromOffset(58, 58)
+    Open.Size = UDim2.fromOffset(55, 55)
     Open.Position = UDim2.fromOffset(15, 200)
-    Open.Text = "TLX"
-    Open.TextSize = 16
-    Open.Font = Enum.Font.GothamBold
+    Open.Text = "☰"
+    Open.TextSize = 25
     Open.TextColor3 = Color3.new(1, 1, 1)
     Open.BackgroundColor3 = Color3.fromRGB(180, 40, 130)
     Open.Visible = false
     Open.Parent = Gui
 
     Instance.new("UICorner", Open).CornerRadius = UDim.new(1, 0)
+
+    --==================================================
+    -- FECHAR / ABRIR
+    --==================================================
 
     Close.MouseButton1Click:Connect(function()
         Main.Visible = false
@@ -289,149 +383,63 @@ Enter.MouseButton1Click:Connect(function()
     end)
 
     --==================================================
-    -- CRIADOR DE BOTÕES
+    -- BOTÃO ESP
     --==================================================
 
-    local function createButton(text, y)
-        local button = Instance.new("TextButton")
-        button.Size = UDim2.new(1, -30, 0, 45)
-        button.Position = UDim2.fromOffset(15, y)
-        button.Text = text
-        button.TextColor3 = Color3.new(1, 1, 1)
-        button.BackgroundColor3 = Color3.fromRGB(180, 40, 130)
-        button.Font = Enum.Font.GothamBold
-        button.TextSize = 15
-        button.Parent = Main
+    local ESPButton = Instance.new("TextButton")
+    ESPButton.Size = UDim2.new(1, -30, 0, 50)
+    ESPButton.Position = UDim2.fromOffset(15, 65)
+    ESPButton.Text = "ESP ROLES  [ON]"
+    ESPButton.TextColor3 = Color3.new(1, 1, 1)
+    ESPButton.BackgroundColor3 = Color3.fromRGB(180, 40, 130)
+    ESPButton.Font = Enum.Font.GothamBold
+    ESPButton.TextSize = 16
+    ESPButton.Parent = Main
 
-        Instance.new("UICorner", button).CornerRadius = UDim.new(0, 9)
-
-        return button
-    end
-
-    --==================================================
-    -- ESP
-    --==================================================
-
-    local ESPButton = createButton("ESP ROLES [ON]", 60)
+    Instance.new("UICorner", ESPButton).CornerRadius = UDim.new(0, 9)
 
     ESPButton.MouseButton1Click:Connect(function()
+
         ESP_ENABLED = not ESP_ENABLED
 
-        ESPButton.Text = "ESP ROLES [" .. (ESP_ENABLED and "ON" or "OFF") .. "]"
+        if ESP_ENABLED then
 
-        if not ESP_ENABLED then
+            ESPButton.Text = "ESP ROLES  [ON]"
+            ESPButton.BackgroundColor3 =
+                Color3.fromRGB(180, 40, 130)
+
+        else
+
+            ESPButton.Text = "ESP ROLES  [OFF]"
+            ESPButton.BackgroundColor3 =
+                Color3.fromRGB(35, 35, 45)
+
+            -- Desliga imediatamente
             for _, highlight in pairs(ESP) do
-                highlight.Enabled = false
-            end
-        end
-    end)
-
-    --==================================================
-    -- INFINITE JUMP
-    --==================================================
-
-    local JumpButton = createButton("INFINITE JUMP [OFF]", 112)
-
-    JumpButton.MouseButton1Click:Connect(function()
-        INFJUMP_ENABLED = not INFJUMP_ENABLED
-        JumpButton.Text = "INFINITE JUMP [" ..
-            (INFJUMP_ENABLED and "ON" or "OFF") .. "]"
-    end)
-
-    UserInputService.JumpRequest:Connect(function()
-        if INFJUMP_ENABLED then
-            local character = LocalPlayer.Character
-            local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-
-            if humanoid then
-                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end
-    end)
-
-    --==================================================
-    -- NOCLIP
-    --==================================================
-
-    local NoclipButton = createButton("NOCLIP [OFF]", 164)
-
-    NoclipButton.MouseButton1Click:Connect(function()
-        NOCLIP_ENABLED = not NOCLIP_ENABLED
-
-        NoclipButton.Text = "NOCLIP [" ..
-            (NOCLIP_ENABLED and "ON" or "OFF") .. "]"
-
-        if NOCLIP_ENABLED then
-            noclipConnection = RunService.Stepped:Connect(function()
-                local character = LocalPlayer.Character
-
-                if character then
-                    for _, part in ipairs(character:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.CanCollide = false
-                        end
-                    end
+                if highlight then
+                    highlight.Enabled = false
                 end
-            end)
-        elseif noclipConnection then
-            noclipConnection:Disconnect()
-            noclipConnection = nil
+            end
+
         end
+
     end)
 
     --==================================================
-    -- AIM DE TREINO / FOV
-    -- Apenas NPCs com atributo "TLXTarget"
-    --==================================================
-
-    local AimButton = createButton("AIM TRAINER [OFF]", 216)
-
-    AimButton.MouseButton1Click:Connect(function()
-        AIM_ENABLED = not AIM_ENABLED
-
-        AimButton.Text = "AIM TRAINER [" ..
-            (AIM_ENABLED and "ON" or "OFF") .. "]"
-
-        if AIM_ENABLED then
-            aimConnection = RunService.RenderStepped:Connect(function()
-                -- O alvo de treino pode ser encontrado aqui:
-                -- NPC com atributo TLXTarget = true
-                -- mantendo a mira dentro do FOV configurado.
-            end)
-        elseif aimConnection then
-            aimConnection:Disconnect()
-            aimConnection = nil
-        end
-    end)
-
-    --==================================================
-    -- FOV
-    --==================================================
-
-    local FOVButton = createButton("FOV: 120", 268)
-
-    FOVButton.MouseButton1Click:Connect(function()
-        AIM_FOV += 20
-
-        if AIM_FOV > 240 then
-            AIM_FOV = 40
-        end
-
-        FOVButton.Text = "FOV: " .. AIM_FOV
-    end)
-
-    --==================================================
-    -- INFO
+    -- LEGENDA
     --==================================================
 
     local Info = Instance.new("TextLabel")
-    Info.Size = UDim2.new(1, -30, 0, 40)
-    Info.Position = UDim2.fromOffset(15, 325)
+    Info.Size = UDim2.new(1, -30, 0, 70)
+    Info.Position = UDim2.fromOffset(15, 125)
     Info.BackgroundTransparency = 1
-    Info.Text = "TLX SCRIPT MM2 • TEST HUB"
-    Info.TextColor3 = Color3.fromRGB(180, 180, 190)
+    Info.Text =
+        "🔴 Murderer   |   🔵 Sheriff\n" ..
+        "ESP detecta Knife/Gun no Backpack ou Character."
+    Info.TextColor3 = Color3.fromRGB(220, 220, 220)
     Info.Font = Enum.Font.Gotham
-    Info.TextSize = 12
+    Info.TextSize = 14
+    Info.TextWrapped = true
     Info.Parent = Main
 
 end)
