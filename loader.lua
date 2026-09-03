@@ -216,18 +216,15 @@ end)
 -- ESTILO DA INTERFACE
 --==================================================
 
--- ID da imagem de fundo. Substitua pelo Asset ID da imagem enviada ao Roblox.
--- Fundo externo desativado para manter compatibilidade com executores e Studio.
-local BACKGROUND_IMAGE = ""
-
+-- Tema visual: rosa e preto, sem assets externos.
 local COLORS = {
-    Background = Color3.fromRGB(11, 14, 24),
-    Surface = Color3.fromRGB(19, 24, 38),
-    SurfaceLight = Color3.fromRGB(29, 36, 55),
-    Accent = Color3.fromRGB(168, 85, 247),
+    Background = Color3.fromRGB(7, 7, 10),
+    Surface = Color3.fromRGB(18, 15, 20),
+    SurfaceLight = Color3.fromRGB(43, 21, 31),
+    Accent = Color3.fromRGB(236, 72, 153),
     AccentLight = Color3.fromRGB(236, 72, 153),
     Text = Color3.fromRGB(248, 250, 252),
-    Muted = Color3.fromRGB(148, 163, 184),
+    Muted = Color3.fromRGB(174, 139, 156),
     Success = Color3.fromRGB(34, 197, 94),
     Danger = Color3.fromRGB(239, 68, 68),
 }
@@ -435,11 +432,11 @@ Enter.MouseButton1Click:Connect(function()
     Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     Gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
-    local MainShadow = addShadow(Gui, UDim2.fromOffset(352, 632), UDim2.fromScale(0.5, 0.5))
+    local MainShadow = addShadow(Gui, UDim2.fromOffset(412, 498), UDim2.fromScale(0.5, 0.5))
     MainShadow.AnchorPoint = Vector2.new(0.5, 0.5)
 
     local Main = Instance.new("Frame")
-    Main.Size = UDim2.fromOffset(340, 620)
+    Main.Size = UDim2.fromOffset(400, 486)
     Main.Position = UDim2.fromScale(0.5, 0.5)
     Main.AnchorPoint = Vector2.new(0.5, 0.5)
     Main.BackgroundColor3 = COLORS.Background
@@ -448,109 +445,17 @@ Enter.MouseButton1Click:Connect(function()
     addCorner(Main, 20)
     addStroke(Main, COLORS.Accent, 0.15, 1.5)
 
-    -- FUNDO PIXELIZADO DA ARTE ENVIADA, DESENHADO DIRETAMENTE NO LUA
+    -- FUNDO ROXO SIMPLES E COMPATÍVEL, SEM ASSETS EXTERNOS
     local ArtLayer = Instance.new("Frame")
-    ArtLayer.Name = "VioletFantasyBackground"
+    ArtLayer.Name = "VioletBackground"
     ArtLayer.Size = UDim2.fromScale(1, 1)
     ArtLayer.Position = UDim2.fromScale(0, 0)
-    ArtLayer.BackgroundColor3 = Color3.fromRGB(22, 8, 38)
+    ArtLayer.BackgroundColor3 = Color3.fromRGB(10, 8, 12)
     ArtLayer.BorderSizePixel = 0
     ArtLayer.ZIndex = 1
-    ArtLayer.ClipsDescendants = true
     ArtLayer.Parent = Main
     addCorner(ArtLayer, 20)
-
-    -- Mosaico compacto baseado na própria imagem roxa enviada.
-    local ART_COLUMNS = 24
-    local ART_ROWS = 44
-    local ART_PALETTE = {
-        Color3.fromRGB(242, 197, 252),
-        Color3.fromRGB(225, 164, 247),
-        Color3.fromRGB(215, 142, 246),
-        Color3.fromRGB(200, 121, 233),
-        Color3.fromRGB(193, 98, 232),
-        Color3.fromRGB(179, 78, 219),
-        Color3.fromRGB(144, 84, 168),
-        Color3.fromRGB(136, 69, 164),
-        Color3.fromRGB(154, 59, 190),
-        Color3.fromRGB(119, 57, 144),
-        Color3.fromRGB(126, 45, 158),
-        Color3.fromRGB(116, 33, 146),
-        Color3.fromRGB(87, 53, 105),
-        Color3.fromRGB(74, 42, 90),
-        Color3.fromRGB(74, 23, 93),
-        Color3.fromRGB(52, 22, 66)
-    }
-    local ART_GRID =
-        "BBBAAA855524885885585100" ..
-        "BBABBB888514535548855103" ..
-        "ABABBEA88853114358523444" ..
-        "BBBBBBBB8855335438413885" ..
-        "BBABBBBBA888854223124588" ..
-        "5BABBB8BB788554321132455" ..
-        "6BB8388AAAA8545310112855" ..
-        "CBB45AAA8AAA8343122585A8" ..
-        "B99AAA7AAAA8832224588A85" ..
-        "999AAA7AAAA8842334585532" ..
-        "9997AA87A7A8323444582123" ..
-        "C978AAA88AA8224534452110" ..
-        "FC787AA84888554423521144" ..
-        "FDD78AA88855552212112387" ..
-        "FDFD788885585544322235A7" ..
-        "DFFD988B75588544422388BB" ..
-        "FFDDBBB85555542213558853" ..
-        "FFDFEC8445544322114A8401" ..
-        "FDCECB954542232211321269" ..
-        "657EECC98432221111116C71" ..
-        "118C9CCCC6422356979CE524" ..
-        "1038889CCC939DFDED9C9225" ..
-        "11148857CDFDDDDCCCCCC613" ..
-        "111485547FFFCCCCCCD99C63" ..
-        "11155544CDDFFCCC9CC96666" ..
-        "315C844BFDCDFCC999C9633B" ..
-        "CAEFD46FFDDCFD9969994155" ..
-        "FFEEFEDFEFDCCFC966796336" ..
-        "FEFEEFFDDEFDCCF996665313" ..
-        "FEEEEEFFDDEFDCDC99663031" ..
-        "FFEEEEEEFDDEDDCCC9963152" ..
-        "FDDEDFEEFFFCDFFCC9963002" ..
-        "FDDDDDDFFEFFDCCCCC996202" ..
-        "FEEDDCCDFEEFE99CC9943231" ..
-        "DDFEDDCCCEBBFC9C96420113" ..
-        "CCCDDDDC9BEBEE9973521210" ..
-        "926DDCCC99BBEE7961432210" ..
-        "D9CCCC66639BAB5262243221" ..
-        "FDDCC931316AA85001122210" ..
-        "DDDC9796735BB82110001320" ..
-        "DDCCC7777796AA1010000220" ..
-        "DCC99931479BA10000000000" ..
-        "DCCC9931799A800000000000" ..
-        "DC99C96979BA810000000000
-
-    for row = 0, ART_ROWS - 1 do
-        local rowData = ART_GRID:sub(row * ART_COLUMNS + 1, (row + 1) * ART_COLUMNS)
-        for column = 0, ART_COLUMNS - 1 do
-            local colorIndex = tonumber(rowData:sub(column + 1, column + 1), 16) + 1
-            local pixel = Instance.new("Frame")
-            pixel.Size = UDim2.new(1 / ART_COLUMNS, 1, 1 / ART_ROWS, 1)
-            pixel.Position = UDim2.new(column / ART_COLUMNS, 0, row / ART_ROWS, 0)
-            pixel.BackgroundColor3 = ART_PALETTE[colorIndex]
-            pixel.BackgroundTransparency = 0.06
-            pixel.BorderSizePixel = 0
-            pixel.ZIndex = 1
-            pixel.Parent = ArtLayer
-        end
-    end
-
-    local ArtOverlay = Instance.new("Frame")
-    ArtOverlay.Name = "ArtReadabilityOverlay"
-    ArtOverlay.Size = UDim2.fromScale(1, 1)
-    ArtOverlay.BackgroundColor3 = Color3.fromRGB(12, 6, 21)
-    ArtOverlay.BackgroundTransparency = 0.48
-    ArtOverlay.BorderSizePixel = 0
-    ArtOverlay.ZIndex = 1
-    ArtOverlay.Parent = ArtLayer
-    addCorner(ArtOverlay, 20)
+    addGradient(ArtLayer, Color3.fromRGB(72, 12, 42), Color3.fromRGB(7, 7, 10), 135)
 
     -- ARRASTAR PAINEL
     local dragging = false
@@ -727,10 +632,10 @@ Enter.MouseButton1Click:Connect(function()
 
     local Footer = Instance.new("TextLabel")
     Footer.Size = UDim2.new(1, -40, 0, 20)
-    Footer.Position = UDim2.fromOffset(20, 584)
+    Footer.Position = UDim2.fromOffset(20, 452)
     Footer.BackgroundTransparency = 1
     Footer.Text = "TLX  •  Interface renovada"
-    Footer.TextColor3 = Color3.fromRGB(100, 116, 139)
+    Footer.TextColor3 = Color3.fromRGB(151, 102, 123)
     Footer.Font = Enum.Font.Gotham
     Footer.TextSize = 10
     Footer.TextXAlignment = Enum.TextXAlignment.Center
