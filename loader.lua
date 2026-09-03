@@ -1,5 +1,5 @@
---// TLX MM2 COPY HUB - VERSÃO MELHORADA
---// Para sua própria cópia no Roblox Studio
+--// TLX MM2 COPY HUB
+--// Interface visual renovada para uso no Roblox Studio
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -21,15 +21,27 @@ local ESP = {}
 
 local function getRole(player)
     local backpack = player:FindFirstChild("Backpack")
+
     if backpack then
-        if backpack:FindFirstChild("Knife") then return "Murderer" end
-        if backpack:FindFirstChild("Gun") then return "Sheriff" end
+        if backpack:FindFirstChild("Knife") then
+            return "Murderer"
+        end
+
+        if backpack:FindFirstChild("Gun") then
+            return "Sheriff"
+        end
     end
 
     local character = player.Character
+
     if character then
-        if character:FindFirstChild("Knife") then return "Murderer" end
-        if character:FindFirstChild("Gun") then return "Sheriff" end
+        if character:FindFirstChild("Knife") then
+            return "Murderer"
+        end
+
+        if character:FindFirstChild("Gun") then
+            return "Sheriff"
+        end
     end
 
     return "Innocent"
@@ -51,39 +63,54 @@ end
 --==================================================
 
 local function updateESP(player)
-    if player == LocalPlayer then return end
+    if player == LocalPlayer then
+        return
+    end
+
     local character = player.Character
-    if not character then removeESP(player) return end
+
+    if not character then
+        removeESP(player)
+        return
+    end
 
     if not ESP_ENABLED then
-        if ESP[player] then ESP[player].Enabled = false end
+        if ESP[player] then
+            ESP[player].Enabled = false
+        end
         return
     end
 
     local highlight = ESP[player]
+
     if not highlight or highlight.Parent ~= character then
-        if highlight then highlight:Destroy() end
+        if highlight then
+            highlight:Destroy()
+        end
+
         highlight = Instance.new("Highlight")
         highlight.Name = "TLXRoleESP"
         highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
         highlight.FillTransparency = 0.45
         highlight.OutlineTransparency = 0
         highlight.Parent = character
+
         ESP[player] = highlight
     end
 
     local role = getRole(player)
+
     highlight.Enabled = true
 
     if role == "Murderer" then
-        highlight.FillColor = Color3.fromRGB(255, 60, 60)
-        highlight.OutlineColor = Color3.fromRGB(255, 60, 60)
+        highlight.FillColor = Color3.fromRGB(239, 68, 68)
+        highlight.OutlineColor = Color3.fromRGB(248, 113, 113)
     elseif role == "Sheriff" then
-        highlight.FillColor = Color3.fromRGB(60, 140, 255)
-        highlight.OutlineColor = Color3.fromRGB(60, 140, 255)
+        highlight.FillColor = Color3.fromRGB(59, 130, 246)
+        highlight.OutlineColor = Color3.fromRGB(96, 165, 250)
     else
-        highlight.FillColor = Color3.fromRGB(80, 255, 140)
-        highlight.OutlineColor = Color3.fromRGB(80, 255, 140)
+        highlight.FillColor = Color3.fromRGB(34, 197, 94)
+        highlight.OutlineColor = Color3.fromRGB(74, 222, 128)
     end
 end
 
@@ -99,22 +126,37 @@ task.spawn(function()
     end
 end)
 
-Players.PlayerRemoving:Connect(removeESP)
+Players.PlayerRemoving:Connect(function(player)
+    removeESP(player)
+end)
 
 local function setupPlayer(player)
-    if player == LocalPlayer then return end
+    if player == LocalPlayer then
+        return
+    end
+
     player.CharacterAdded:Connect(function()
         removeESP(player)
         task.wait(0.5)
         updateESP(player)
     end)
-    player.CharacterRemoving:Connect(removeESP)
+
+    player.CharacterRemoving:Connect(function()
+        removeESP(player)
+    end)
+
     if player.Character then
-        task.spawn(function() task.wait(0.5) updateESP(player) end)
+        task.spawn(function()
+            task.wait(0.5)
+            updateESP(player)
+        end)
     end
 end
 
-for _, player in ipairs(Players:GetPlayers()) do setupPlayer(player) end
+for _, player in ipairs(Players:GetPlayers()) do
+    setupPlayer(player)
+end
+
 Players.PlayerAdded:Connect(setupPlayer)
 
 --==================================================
@@ -123,19 +165,32 @@ Players.PlayerAdded:Connect(setupPlayer)
 
 local function setNoclip(enabled)
     NOCLIP_ENABLED = enabled
+
     local character = LocalPlayer.Character
-    if not character then return end
+
+    if not character then
+        return
+    end
+
     for _, part in ipairs(character:GetDescendants()) do
-        if part:IsA("BasePart") then part.CanCollide = not enabled end
+        if part:IsA("BasePart") then
+            part.CanCollide = not enabled
+        end
     end
 end
 
 RunService.Stepped:Connect(function()
-    if not NOCLIP_ENABLED then return end
+    if not NOCLIP_ENABLED then
+        return
+    end
+
     local character = LocalPlayer.Character
+
     if character then
         for _, part in ipairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then part.CanCollide = false end
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
         end
     end
 end)
@@ -145,34 +200,146 @@ end)
 --==================================================
 
 UserInputService.JumpRequest:Connect(function()
-    if not INFINITE_JUMP_ENABLED then return end
+    if not INFINITE_JUMP_ENABLED then
+        return
+    end
+
     local character = LocalPlayer.Character
     local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-    if humanoid then humanoid:ChangeState(Enum.HumanoidStateType.Jumping) end
+
+    if humanoid then
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
 end)
 
 --==================================================
--- FUNÇÕES DE ANIMAÇÃO
+-- ESTILO DA INTERFACE
 --==================================================
 
-local function addButtonEffect(button)
+local COLORS = {
+    Background = Color3.fromRGB(11, 14, 24),
+    Surface = Color3.fromRGB(19, 24, 38),
+    SurfaceLight = Color3.fromRGB(29, 36, 55),
+    Accent = Color3.fromRGB(168, 85, 247),
+    AccentLight = Color3.fromRGB(236, 72, 153),
+    Text = Color3.fromRGB(248, 250, 252),
+    Muted = Color3.fromRGB(148, 163, 184),
+    Success = Color3.fromRGB(34, 197, 94),
+    Danger = Color3.fromRGB(239, 68, 68),
+}
+
+local function addCorner(instance, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius)
+    corner.Parent = instance
+    return corner
+end
+
+local function addStroke(instance, color, transparency, thickness)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = color
+    stroke.Transparency = transparency or 0
+    stroke.Thickness = thickness or 1
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Parent = instance
+    return stroke
+end
+
+local function addGradient(instance, colorA, colorB, rotation)
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new(colorA, colorB)
+    gradient.Rotation = rotation or 0
+    gradient.Parent = instance
+    return gradient
+end
+
+local function addShadow(parent, size, position)
+    local shadow = Instance.new("Frame")
+    shadow.Name = "Shadow"
+    shadow.Size = size
+    shadow.Position = position
+    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.BackgroundTransparency = 0.55
+    shadow.ZIndex = 0
+    shadow.Parent = parent
+    addCorner(shadow, 18)
+    return shadow
+end
+
+local function addHover(button, normalColor, hoverColor)
     button.MouseEnter:Connect(function()
         TweenService:Create(button, TweenInfo.new(0.15), {
-            BackgroundColor3 = button.ActiveColor or Color3.fromRGB(210, 60, 160),
-            Size = UDim2.new(1, -20, 0, 47)
+            BackgroundColor3 = hoverColor,
+            Size = UDim2.new(button.Size.X.Scale, button.Size.X.Offset, 0, button.Size.Y.Offset + 2),
         }):Play()
     end)
+
     button.MouseLeave:Connect(function()
-        local originalColor = button.OriginalColor or Color3.fromRGB(180, 40, 130)
         TweenService:Create(button, TweenInfo.new(0.15), {
-            BackgroundColor3 = button.Toggled and originalColor or Color3.fromRGB(40, 40, 55),
-            Size = UDim2.new(1, -30, 0, 45)
+            BackgroundColor3 = normalColor,
+            Size = UDim2.new(button.Size.X.Scale, button.Size.X.Offset, 0, button.Size.Y.Offset - 2),
         }):Play()
     end)
 end
 
+local function styleButton(button, icon, title, description, enabled)
+    button.Text = ""
+    button.AutoButtonColor = false
+    button.BackgroundColor3 = enabled and COLORS.SurfaceLight or COLORS.Surface
+    addCorner(button, 12)
+    addStroke(button, enabled and COLORS.Accent or Color3.fromRGB(51, 65, 85), 0.35, 1)
+
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Size = UDim2.fromOffset(34, 34)
+    iconLabel.Position = UDim2.fromOffset(12, 7)
+    iconLabel.BackgroundColor3 = enabled and COLORS.Accent or Color3.fromRGB(51, 65, 85)
+    iconLabel.Text = icon
+    iconLabel.TextColor3 = COLORS.Text
+    iconLabel.Font = Enum.Font.GothamBold
+    iconLabel.TextSize = 15
+    iconLabel.Parent = button
+    addCorner(iconLabel, 9)
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -118, 0, 22)
+    titleLabel.Position = UDim2.fromOffset(58, 7)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = title
+    titleLabel.TextColor3 = COLORS.Text
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 14
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = button
+
+    local descriptionLabel = Instance.new("TextLabel")
+    descriptionLabel.Size = UDim2.new(1, -118, 0, 17)
+    descriptionLabel.Position = UDim2.fromOffset(58, 28)
+    descriptionLabel.BackgroundTransparency = 1
+    descriptionLabel.Text = description
+    descriptionLabel.TextColor3 = COLORS.Muted
+    descriptionLabel.Font = Enum.Font.Gotham
+    descriptionLabel.TextSize = 11
+    descriptionLabel.TextXAlignment = Enum.TextXAlignment.Left
+    descriptionLabel.Parent = button
+
+    local stateLabel = Instance.new("TextLabel")
+    stateLabel.Name = "State"
+    stateLabel.Size = UDim2.fromOffset(52, 24)
+    stateLabel.Position = UDim2.new(1, -64, 0.5, -12)
+    stateLabel.BackgroundColor3 = enabled and COLORS.Success or Color3.fromRGB(51, 65, 85)
+    stateLabel.BackgroundTransparency = enabled and 0.75 or 0
+    stateLabel.Text = enabled and "ON" or "OFF"
+    stateLabel.TextColor3 = enabled and Color3.fromRGB(134, 239, 172) or COLORS.Muted
+    stateLabel.Font = Enum.Font.GothamBold
+    stateLabel.TextSize = 11
+    stateLabel.Parent = button
+    addCorner(stateLabel, 7)
+
+    return stateLabel
+end
+
 --==================================================
--- TELA DE KEY - MELHORADA
+-- KEY GUI
 --==================================================
 
 local KeyGui = Instance.new("ScreenGui")
@@ -181,94 +348,92 @@ KeyGui.ResetOnSpawn = false
 KeyGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 KeyGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
+local KeyShadow = addShadow(KeyGui, UDim2.fromOffset(342, 232), UDim2.fromScale(0.5, 0.5))
+KeyShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+
 local KeyFrame = Instance.new("Frame")
-KeyFrame.Size = UDim2.fromOffset(340, 200)
+KeyFrame.Size = UDim2.fromOffset(330, 220)
 KeyFrame.Position = UDim2.fromScale(0.5, 0.5)
 KeyFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-KeyFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
-KeyFrame.BorderSizePixel = 0
+KeyFrame.BackgroundColor3 = COLORS.Background
+KeyFrame.ZIndex = 1
 KeyFrame.Parent = KeyGui
+addCorner(KeyFrame, 18)
+addStroke(KeyFrame, COLORS.Accent, 0.2, 1.5)
 
-Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 16)
-
-local KeyStroke = Instance.new("UIStroke")
-KeyStroke.Color = Color3.fromRGB(255, 90, 200)
-KeyStroke.Thickness = 3
-KeyStroke.Transparency = 0.1
-KeyStroke.Parent = KeyFrame
-
-local KeyShadow = Instance.new("UIGradient")
-KeyShadow.Rotation = 90
-KeyShadow.Transparency = NumberSequence.new{
-    Keypoints = {
-        NumberSequenceKeypoint.new(0, 0.1),
-        NumberSequenceKeypoint.new(1, 0.3)
-    }
-}
-KeyShadow.Parent = KeyFrame
+local KeyTop = Instance.new("Frame")
+KeyTop.Size = UDim2.new(1, 0, 0, 70)
+KeyTop.BackgroundColor3 = COLORS.Accent
+KeyTop.Parent = KeyFrame
+addCorner(KeyTop, 18)
+addGradient(KeyTop, COLORS.Accent, COLORS.AccentLight, 25)
 
 local KeyTitle = Instance.new("TextLabel")
-KeyTitle.Size = UDim2.new(1, 0, 0, 60)
-KeyTitle.Position = UDim2.fromOffset(0, 10)
+KeyTitle.Size = UDim2.new(1, -40, 0, 28)
+KeyTitle.Position = UDim2.fromOffset(20, 12)
 KeyTitle.BackgroundTransparency = 1
-KeyTitle.Text = "✨ TLX HUB ✨"
-KeyTitle.TextColor3 = Color3.fromRGB(255, 110, 210)
+KeyTitle.Text = "TLX HUB"
+KeyTitle.TextColor3 = COLORS.Text
 KeyTitle.Font = Enum.Font.GothamBold
-KeyTitle.TextSize = 26
-KeyTitle.Parent = KeyFrame
+KeyTitle.TextSize = 23
+KeyTitle.TextXAlignment = Enum.TextXAlignment.Left
+KeyTitle.Parent = KeyTop
+
+local KeySubtitle = Instance.new("TextLabel")
+KeySubtitle.Size = UDim2.new(1, -40, 0, 18)
+KeySubtitle.Position = UDim2.fromOffset(20, 40)
+KeySubtitle.BackgroundTransparency = 1
+KeySubtitle.Text = "Acesso seguro ao seu painel"
+KeySubtitle.TextColor3 = Color3.fromRGB(245, 232, 255)
+KeySubtitle.Font = Enum.Font.Gotham
+KeySubtitle.TextSize = 12
+KeySubtitle.TextXAlignment = Enum.TextXAlignment.Left
+KeySubtitle.Parent = KeyTop
 
 local KeyBox = Instance.new("TextBox")
-KeyBox.Size = UDim2.new(1, -50, 0, 45)
-KeyBox.Position = UDim2.fromOffset(25, 75)
-KeyBox.PlaceholderText = "🔑 Digite sua key..."
+KeyBox.Size = UDim2.new(1, -40, 0, 42)
+KeyBox.Position = UDim2.fromOffset(20, 88)
+KeyBox.PlaceholderText = "Digite sua key..."
 KeyBox.Text = ""
-KeyBox.TextColor3 = Color3.fromRGB(240, 240, 240)
-KeyBox.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
-KeyBox.Font = Enum.Font.GothamMedium
-KeyBox.TextSize = 16
+KeyBox.ClearTextOnFocus = false
+KeyBox.TextColor3 = COLORS.Text
+KeyBox.PlaceholderColor3 = COLORS.Muted
+KeyBox.BackgroundColor3 = COLORS.Surface
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.TextSize = 14
 KeyBox.Parent = KeyFrame
-
-Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 10)
-local BoxStroke = Instance.new("UIStroke")
-BoxStroke.Color = Color3.fromRGB(100, 100, 130)
-BoxStroke.Thickness = 1.5
-BoxStroke.Parent = KeyBox
+addCorner(KeyBox, 10)
+addStroke(KeyBox, Color3.fromRGB(71, 85, 105), 0.25, 1)
 
 local Enter = Instance.new("TextButton")
-Enter.Size = UDim2.new(1, -50, 0, 45)
-Enter.Position = UDim2.fromOffset(25, 135)
-Enter.Text = "🚀 ENTRAR"
-Enter.TextColor3 = Color3.fromRGB(255, 255, 255)
-Enter.BackgroundColor3 = Color3.fromRGB(200, 50, 150)
+Enter.Size = UDim2.new(1, -40, 0, 42)
+Enter.Position = UDim2.fromOffset(20, 145)
+Enter.Text = "ENTRAR NO HUB"
+Enter.TextColor3 = COLORS.Text
+Enter.BackgroundColor3 = COLORS.Accent
 Enter.Font = Enum.Font.GothamBold
-Enter.TextSize = 17
-Enter.AutoLocalize = false
+Enter.TextSize = 13
+Enter.AutoButtonColor = false
 Enter.Parent = KeyFrame
-
-Instance.new("UICorner", Enter).CornerRadius = UDim.new(0, 10)
-local EnterStroke = Instance.new("UIStroke")
-EnterStroke.Color = Color3.fromRGB(255, 130, 200)
-EnterStroke.Thickness = 1.5
-EnterStroke.Parent = Enter
+addCorner(Enter, 10)
+addGradient(Enter, COLORS.Accent, COLORS.AccentLight, 25)
+addHover(Enter, COLORS.Accent, COLORS.AccentLight)
 
 --==================================================
--- ABRIR HUB PRINCIPAL
+-- ABRIR HUB
 --==================================================
 
 Enter.MouseButton1Click:Connect(function()
     if KeyBox.Text ~= KEY then
         KeyBox.Text = ""
-        KeyBox.PlaceholderText = "❌ Key incorreta! Tente novamente"
-        BoxStroke.Color = Color3.fromRGB(255, 80, 80)
-        task.wait(2)
-        BoxStroke.Color = Color3.fromRGB(100, 100, 130)
+        KeyBox.PlaceholderText = "Key incorreta. Tente novamente."
         return
     end
 
     KeyGui:Destroy()
 
     --==================================================
-    -- HUB PRINCIPAL - REDESIGN COMPLETO
+    -- HUB
     --==================================================
 
     local Gui = Instance.new("ScreenGui")
@@ -277,43 +442,30 @@ Enter.MouseButton1Click:Connect(function()
     Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     Gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
+    local MainShadow = addShadow(Gui, UDim2.fromOffset(412, 498), UDim2.fromScale(0.5, 0.5))
+    MainShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+
     local Main = Instance.new("Frame")
-    Main.Size = UDim2.fromOffset(350, 380)
+    Main.Size = UDim2.fromOffset(400, 486)
     Main.Position = UDim2.fromScale(0.5, 0.5)
     Main.AnchorPoint = Vector2.new(0.5, 0.5)
-    Main.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
+    Main.BackgroundColor3 = COLORS.Background
+    Main.ZIndex = 1
     Main.Parent = Gui
+    addCorner(Main, 20)
+    addStroke(Main, COLORS.Accent, 0.15, 1.5)
 
-    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 18)
-
-    local MainStroke = Instance.new("UIStroke")
-    MainStroke.Color = Color3.fromRGB(255, 90, 200)
-    MainStroke.Thickness = 2.5
-    MainStroke.Transparency = 0.15
-    MainStroke.Parent = Main
-
-    local MainGradient = Instance.new("UIGradient")
-    MainGradient.Rotation = 90
-    MainGradient.Transparency = NumberSequence.new{
-        NumberSequenceKeypoint.new(0, 0.05),
-        NumberSequenceKeypoint.new(1, 0.25)
-    }
-    MainGradient.Parent = Main
-
-    --==================================================
     -- ARRASTAR PAINEL
-    --==================================================
-
     local dragging = false
     local dragStart
     local startPosition
 
     Main.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPosition = Main.Position
+
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
@@ -323,10 +475,7 @@ Enter.MouseButton1Click:Connect(function()
     end)
 
     UserInputService.InputChanged:Connect(function(input)
-        if dragging and (
-            input.UserInputType == Enum.UserInputType.MouseMovement
-            or input.UserInputType == Enum.UserInputType.Touch
-        ) then
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - dragStart
             Main.Position = UDim2.new(
                 startPosition.X.Scale,
@@ -337,246 +486,182 @@ Enter.MouseButton1Click:Connect(function()
         end
     end)
 
-    --==================================================
-    -- TÍTULO
-    --==================================================
-
-    local TitleBar = Instance.new("Frame")
-    TitleBar.Size = UDim2.new(1, 0, 0, 55)
-    TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-    TitleBar.BackgroundTransparency = 0.3
-    TitleBar.Parent = Main
-
-    Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 18)
+    -- CABEÇALHO
+    local Header = Instance.new("Frame")
+    Header.Size = UDim2.new(1, 0, 0, 92)
+    Header.BackgroundColor3 = COLORS.Accent
+    Header.Parent = Main
+    addCorner(Header, 20)
+    addGradient(Header, COLORS.Accent, COLORS.AccentLight, 25)
 
     local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, -70, 1, 0)
-    Title.Position = UDim2.fromOffset(20, 0)
+    Title.Size = UDim2.new(1, -80, 0, 30)
+    Title.Position = UDim2.fromOffset(22, 17)
     Title.BackgroundTransparency = 1
-    Title.Text = "🌸 TLX MM2 HUB 🌸"
-    Title.TextColor3 = Color3.fromRGB(255, 110, 210)
+    Title.Text = "TLX MM2 HUB"
+    Title.TextColor3 = COLORS.Text
     Title.Font = Enum.Font.GothamBold
-    Title.TextSize = 22
+    Title.TextSize = 23
     Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.Parent = TitleBar
+    Title.Parent = Header
 
-    --==================================================
-    -- BOTÃO FECHAR
-    --==================================================
+    local Subtitle = Instance.new("TextLabel")
+    Subtitle.Size = UDim2.new(1, -80, 0, 18)
+    Subtitle.Position = UDim2.fromOffset(22, 51)
+    Subtitle.BackgroundTransparency = 1
+    Subtitle.Text = "Painel de recursos e visualização"
+    Subtitle.TextColor3 = Color3.fromRGB(245, 232, 255)
+    Subtitle.Font = Enum.Font.Gotham
+    Subtitle.TextSize = 12
+    Subtitle.TextXAlignment = Enum.TextXAlignment.Left
+    Subtitle.Parent = Header
 
     local Close = Instance.new("TextButton")
-    Close.Size = UDim2.fromOffset(42, 42)
-    Close.Position = UDim2.new(1, -52, 0, 6)
-    Close.Text = "✕"
-    Close.TextSize = 22
-    Close.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Close.BackgroundColor3 = Color3.fromRGB(220, 70, 120)
-    Close.AutoLocalize = false
-    Close.Parent = TitleBar
+    Close.Size = UDim2.fromOffset(38, 38)
+    Close.Position = UDim2.new(1, -54, 0, 18)
+    Close.Text = "×"
+    Close.TextSize = 25
+    Close.TextColor3 = COLORS.Text
+    Close.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Close.BackgroundTransparency = 0.82
+    Close.AutoButtonColor = false
+    Close.Parent = Header
+    addCorner(Close, 10)
+    addHover(Close, Color3.fromRGB(255, 255, 255), COLORS.Danger)
 
-    Instance.new("UICorner", Close).CornerRadius = UDim.new(0, 12)
-    local CloseStroke = Instance.new("UIStroke")
-    CloseStroke.Color = Color3.fromRGB(255, 130, 160)
-    CloseStroke.Thickness = 1.5
-    CloseStroke.Parent = Close
+    local Section = Instance.new("TextLabel")
+    Section.Size = UDim2.new(1, -40, 0, 20)
+    Section.Position = UDim2.fromOffset(20, 108)
+    Section.BackgroundTransparency = 1
+    Section.Text = "CONTROLES PRINCIPAIS"
+    Section.TextColor3 = COLORS.Muted
+    Section.Font = Enum.Font.GothamBold
+    Section.TextSize = 11
+    Section.TextXAlignment = Enum.TextXAlignment.Left
+    Section.Parent = Main
 
-    --==================================================
-    -- BOTÃO FLUTUANTE
-    --==================================================
+    local function makeControl(y, icon, title, description, enabled)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(1, -40, 0, 50)
+        button.Position = UDim2.fromOffset(20, y)
+        button.Parent = Main
+        local state = styleButton(button, icon, title, description, enabled)
+        return button, state
+    end
+
+    -- ESP
+    local ESPButton, ESPState = makeControl(134, "E", "ESP DE ROLES", "Exibe o papel de cada jogador", ESP_ENABLED)
+    addHover(ESPButton, COLORS.SurfaceLight, Color3.fromRGB(42, 51, 76))
+
+    ESPButton.MouseButton1Click:Connect(function()
+        ESP_ENABLED = not ESP_ENABLED
+        ESPState.Text = ESP_ENABLED and "ON" or "OFF"
+        ESPState.BackgroundColor3 = ESP_ENABLED and COLORS.Success or Color3.fromRGB(51, 65, 85)
+        ESPState.BackgroundTransparency = ESP_ENABLED and 0.75 or 0
+        ESPState.TextColor3 = ESP_ENABLED and Color3.fromRGB(134, 239, 172) or COLORS.Muted
+
+        if not ESP_ENABLED then
+            for _, highlight in pairs(ESP) do
+                if highlight then
+                    highlight.Enabled = false
+                end
+            end
+        end
+    end)
+
+    -- NOCLIP
+    local NoclipButton, NoclipState = makeControl(194, "N", "NOCLIP", "Alterna a colisão do personagem", NOCLIP_ENABLED)
+    addHover(NoclipButton, COLORS.Surface, Color3.fromRGB(42, 51, 76))
+
+    NoclipButton.MouseButton1Click:Connect(function()
+        setNoclip(not NOCLIP_ENABLED)
+        NoclipState.Text = NOCLIP_ENABLED and "ON" or "OFF"
+        NoclipState.BackgroundColor3 = NOCLIP_ENABLED and COLORS.Success or Color3.fromRGB(51, 65, 85)
+        NoclipState.BackgroundTransparency = NOCLIP_ENABLED and 0.75 or 0
+        NoclipState.TextColor3 = NOCLIP_ENABLED and Color3.fromRGB(134, 239, 172) or COLORS.Muted
+    end)
+
+    -- INFINITE JUMP
+    local JumpButton, JumpState = makeControl(254, "J", "INFINITE JUMP", "Permite saltos consecutivos", INFINITE_JUMP_ENABLED)
+    addHover(JumpButton, COLORS.Surface, Color3.fromRGB(42, 51, 76))
+
+    JumpButton.MouseButton1Click:Connect(function()
+        INFINITE_JUMP_ENABLED = not INFINITE_JUMP_ENABLED
+        JumpState.Text = INFINITE_JUMP_ENABLED and "ON" or "OFF"
+        JumpState.BackgroundColor3 = INFINITE_JUMP_ENABLED and COLORS.Success or Color3.fromRGB(51, 65, 85)
+        JumpState.BackgroundTransparency = INFINITE_JUMP_ENABLED and 0.75 or 0
+        JumpState.TextColor3 = INFINITE_JUMP_ENABLED and Color3.fromRGB(134, 239, 172) or COLORS.Muted
+    end)
+
+    -- LEGENDA
+    local LegendFrame = Instance.new("Frame")
+    LegendFrame.Size = UDim2.new(1, -40, 0, 116)
+    LegendFrame.Position = UDim2.fromOffset(20, 324)
+    LegendFrame.BackgroundColor3 = COLORS.Surface
+    LegendFrame.Parent = Main
+    addCorner(LegendFrame, 12)
+    addStroke(LegendFrame, Color3.fromRGB(51, 65, 85), 0.35, 1)
+
+    local LegendTitle = Instance.new("TextLabel")
+    LegendTitle.Size = UDim2.new(1, -24, 0, 22)
+    LegendTitle.Position = UDim2.fromOffset(12, 10)
+    LegendTitle.BackgroundTransparency = 1
+    LegendTitle.Text = "LEGENDA DE ROLES"
+    LegendTitle.TextColor3 = COLORS.Text
+    LegendTitle.Font = Enum.Font.GothamBold
+    LegendTitle.TextSize = 12
+    LegendTitle.TextXAlignment = Enum.TextXAlignment.Left
+    LegendTitle.Parent = LegendFrame
+
+    local Info = Instance.new("TextLabel")
+    Info.Size = UDim2.new(1, -24, 0, 65)
+    Info.Position = UDim2.fromOffset(12, 36)
+    Info.BackgroundTransparency = 1
+    Info.Text = "VERMELHO  •  Murderer   |   AZUL  •  Sheriff\nVERDE  •  Innocent\nMurderer = Knife  •  Sheriff = Gun  •  Sem arma = Innocent"
+    Info.TextColor3 = COLORS.Muted
+    Info.Font = Enum.Font.Gotham
+    Info.TextSize = 11
+    Info.TextWrapped = true
+    Info.TextXAlignment = Enum.TextXAlignment.Left
+    Info.TextYAlignment = Enum.TextYAlignment.Top
+    Info.Parent = LegendFrame
+
+    local Footer = Instance.new("TextLabel")
+    Footer.Size = UDim2.new(1, -40, 0, 20)
+    Footer.Position = UDim2.fromOffset(20, 452)
+    Footer.BackgroundTransparency = 1
+    Footer.Text = "TLX  •  Interface renovada"
+    Footer.TextColor3 = Color3.fromRGB(100, 116, 139)
+    Footer.Font = Enum.Font.Gotham
+    Footer.TextSize = 10
+    Footer.TextXAlignment = Enum.TextXAlignment.Center
+    Footer.Parent = Main
 
     local Open = Instance.new("TextButton")
-    Open.Size = UDim2.fromOffset(60, 60)
-    Open.Position = UDim2.fromOffset(20, 220)
-    Open.Text = "⚙️"
-    Open.TextSize = 28
-    Open.TextColor3 = Color3.new(1, 1, 1)
-    Open.BackgroundColor3 = Color3.fromRGB(200, 50, 150)
+    Open.Size = UDim2.fromOffset(58, 58)
+    Open.Position = UDim2.fromOffset(18, 210)
+    Open.Text = "TLX"
+    Open.TextSize = 14
+    Open.TextColor3 = COLORS.Text
+    Open.BackgroundColor3 = COLORS.Accent
+    Open.AutoButtonColor = false
     Open.Visible = false
-    Open.AutoLocalize = false
     Open.Parent = Gui
-
-    Instance.new("UICorner", Open).CornerRadius = UDim.new(1, 0)
-    local OpenStroke = Instance.new("UIStroke")
-    OpenStroke.Color = Color3.fromRGB(255, 130, 200)
-    OpenStroke.Thickness = 2
-    OpenStroke.Parent = Open
+    addCorner(Open, 18)
+    addStroke(Open, COLORS.AccentLight, 0.2, 1.5)
+    addGradient(Open, COLORS.Accent, COLORS.AccentLight, 25)
 
     Close.MouseButton1Click:Connect(function()
         Main.Visible = false
+        MainShadow.Visible = false
         Open.Visible = true
     end)
 
     Open.MouseButton1Click:Connect(function()
         Main.Visible = true
+        MainShadow.Visible = true
         Open.Visible = false
     end)
-
-    --==================================================
-    -- BOTÃO ESP
-    --==================================================
-
-    local ESPButton = Instance.new("TextButton")
-    ESPButton.Size = UDim2.new(1, -40, 0, 48)
-    ESPButton.Position = UDim2.fromOffset(20, 75)
-    ESPButton.Text = "👁️ ESP ROLES [ON]"
-    ESPButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ESPButton.BackgroundColor3 = Color3.fromRGB(200, 50, 150)
-    ESPButton.Font = Enum.Font.GothamBold
-    ESPButton.TextSize = 16
-    ESPButton.AutoLocalize = false
-    ESPButton.Toggled = true
-    ESPButton.OriginalColor = Color3.fromRGB(200, 50, 150)
-    ESPButton.ActiveColor = Color3.fromRGB(230, 70, 180)
-    ESPButton.Parent = Main
-
-    Instance.new("UICorner", ESPButton).CornerRadius = UDim.new(0, 12)
-    local ESPStroke = Instance.new("UIStroke")
-    ESPStroke.Color = Color3.fromRGB(255, 130, 200)
-    ESPStroke.Thickness = 1.5
-    ESPStroke.Parent = ESPButton
-    addButtonEffect(ESPButton)
-
-    ESPButton.MouseButton1Click:Connect(function()
-        ESP_ENABLED = not ESP_ENABLED
-        ESPButton.Toggled = ESP_ENABLED
-        ESPButton.Text = ESP_ENABLED
-            and "👁️ ESP ROLES [ON]"
-            or "👁️ ESP ROLES [OFF]"
-
-        local targetColor = ESP_ENABLED
-            and Color3.fromRGB(200, 50, 150)
-            or Color3.fromRGB(45, 45, 65)
-
-        TweenService:Create(ESPButton, TweenInfo.new(0.2), {
-            BackgroundColor3 = targetColor
-        }):Play()
-
-        if not ESP_ENABLED then
-            for _, highlight in pairs(ESP) do
-                if highlight then highlight.Enabled = false end
-            end
-        end
-    end)
-
-    --==================================================
-    -- NOCLIP
-    --==================================================
-
-    local NoclipButton = Instance.new("TextButton")
-    NoclipButton.Size = UDim2.new(1, -40, 0, 48)
-    NoclipButton.Position = UDim2.fromOffset(20, 133)
-    NoclipButton.Text = "💀 NOCLIP [OFF]"
-    NoclipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    NoclipButton.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-    NoclipButton.Font = Enum.Font.GothamBold
-    NoclipButton.TextSize = 16
-    NoclipButton.AutoLocalize = false
-    NoclipButton.Toggled = false
-    NoclipButton.OriginalColor = Color3.fromRGB(200, 50, 150)
-    NoclipButton.ActiveColor = Color3.fromRGB(230, 70, 180)
-    NoclipButton.Parent = Main
-
-    Instance.new("UICorner", NoclipButton).CornerRadius = UDim.new(0, 12)
-    local NoclipStroke = Instance.new("UIStroke")
-    NoclipStroke.Color = Color3.fromRGB(110, 110, 140)
-    NoclipStroke.Thickness = 1.5
-    NoclipStroke.Parent = NoclipButton
-    addButtonEffect(NoclipButton)
-
-    NoclipButton.MouseButton1Click:Connect(function()
-        setNoclip(not NOCLIP_ENABLED)
-        NoclipButton.Toggled = NOCLIP_ENABLED
-
-        if NOCLIP_ENABLED then
-            NoclipStroke.Color = Color3.fromRGB(255, 130, 200)
-            TweenService:Create(NoclipButton, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(200, 50, 150)
-            }):Play()
-            NoclipButton.Text = "💀 NOCLIP [ON]"
-        else
-            NoclipStroke.Color = Color3.fromRGB(110, 110, 140)
-            TweenService:Create(NoclipButton, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-            }):Play()
-            NoclipButton.Text = "💀 NOCLIP [OFF]"
-        end
-    end)
-
-    --==================================================
-    -- INFINITE JUMP
-    --==================================================
-
-    local JumpButton = Instance.new("TextButton")
-    JumpButton.Size = UDim2.new(1, -40, 0, 48)
-    JumpButton.Position = UDim2.fromOffset(20, 191)
-    JumpButton.Text = "🦘 INFINITE JUMP [OFF]"
-    JumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    JumpButton.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-    JumpButton.Font = Enum.Font.GothamBold
-    JumpButton.TextSize = 16
-    JumpButton.AutoLocalize = false
-    JumpButton.Toggled = false
-    JumpButton.OriginalColor = Color3.fromRGB(200, 50, 150)
-    JumpButton.ActiveColor = Color3.fromRGB(230, 70, 180)
-    JumpButton.Parent = Main
-
-    Instance.new("UICorner", JumpButton).CornerRadius = UDim.new(0, 12)
-    local JumpStroke = Instance.new("UIStroke")
-    JumpStroke.Color = Color3.fromRGB(110, 110, 140)
-    JumpStroke.Thickness = 1.5
-    JumpStroke.Parent = JumpButton
-    addButtonEffect(JumpButton)
-
-    JumpButton.MouseButton1Click:Connect(function()
-        INFINITE_JUMP_ENABLED = not INFINITE_JUMP_ENABLED
-        JumpButton.Toggled = INFINITE_JUMP_ENABLED
-
-        if INFINITE_JUMP_ENABLED then
-            JumpStroke.Color = Color3.fromRGB(255, 130, 200)
-            TweenService:Create(JumpButton, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(200, 50, 150)
-            }):Play()
-            JumpButton.Text = "🦘 INFINITE JUMP [ON]"
-        else
-            JumpStroke.Color = Color3.fromRGB(110, 110, 140)
-            TweenService:Create(JumpButton, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-            }):Play()
-            JumpButton.Text = "🦘 INFINITE JUMP [OFF]"
-        end
-    end)
-
-    --==================================================
-    -- LEGENDA
-    --==================================================
-
-    local InfoContainer = Instance.new("Frame")
-    InfoContainer.Size = UDim2.new(1, -40, 0, 75)
-    InfoContainer.Position = UDim2.fromOffset(20, 255)
-    InfoContainer.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
-    InfoContainer.BackgroundTransparency = 0.2
-    InfoContainer.Parent = Main
-
-    Instance.new("UICorner", InfoContainer).CornerRadius = UDim.new(0, 12)
-    local InfoStroke = Instance.new("UIStroke")
-    InfoStroke.Color = Color3.fromRGB(100, 100, 140)
-    InfoStroke.Thickness = 1
-    InfoStroke.Transparency = 0.3
-    InfoStroke.Parent = InfoContainer
-
-    local Info = Instance.new("TextLabel")
-    Info.Size = UDim2.new(1, -24, 1, 0)
-    Info.Position = UDim2.fromOffset(12, 0)
-    Info.BackgroundTransparency = 1
-    Info.Text =
-        "🔴 Murderer = Tem faca\n" ..
-        "🔵 Sheriff = Tem arma\n" ..
-        "🟢 Innocent = Sem arma"
-    Info.TextColor3 = Color3.fromRGB(230, 230, 230)
-    Info.Font = Enum.Font.GothamMedium
-    Info.TextSize = 15
-    Info.TextWrapped = true
-    Info.TextYAlignment = Enum.TextYAlignment.Center
-    Info.Parent = InfoContainer
-
 end)
+
+--// Fim do TLX MM2 Copy Hub
