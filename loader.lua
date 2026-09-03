@@ -216,6 +216,9 @@ end)
 -- ESTILO DA INTERFACE
 --==================================================
 
+-- ID da imagem de fundo. Substitua pelo Asset ID da imagem enviada ao Roblox.
+local BACKGROUND_IMAGE = "rbxassetid://COLOQUE_SEU_ASSET_ID_AQUI"
+
 local COLORS = {
     Background = Color3.fromRGB(11, 14, 24),
     Surface = Color3.fromRGB(19, 24, 38),
@@ -310,17 +313,6 @@ local function styleButton(button, icon, title, description, enabled)
     titleLabel.TextSize = 14
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = button
-
-    local descriptionLabel = Instance.new("TextLabel")
-    descriptionLabel.Size = UDim2.new(1, -118, 0, 17)
-    descriptionLabel.Position = UDim2.fromOffset(58, 28)
-    descriptionLabel.BackgroundTransparency = 1
-    descriptionLabel.Text = description
-    descriptionLabel.TextColor3 = COLORS.Muted
-    descriptionLabel.Font = Enum.Font.Gotham
-    descriptionLabel.TextSize = 11
-    descriptionLabel.TextXAlignment = Enum.TextXAlignment.Left
-    descriptionLabel.Parent = button
 
     local stateLabel = Instance.new("TextLabel")
     stateLabel.Name = "State"
@@ -455,6 +447,20 @@ Enter.MouseButton1Click:Connect(function()
     addCorner(Main, 20)
     addStroke(Main, COLORS.Accent, 0.15, 1.5)
 
+    -- IMAGEM DE FUNDO
+    local BackgroundImage = Instance.new("ImageLabel")
+    BackgroundImage.Name = "PurpleBackground"
+    BackgroundImage.Size = UDim2.fromScale(1, 1)
+    BackgroundImage.Position = UDim2.fromScale(0, 0)
+    BackgroundImage.BackgroundTransparency = 1
+    BackgroundImage.Image = BACKGROUND_IMAGE
+    BackgroundImage.ImageTransparency = 0.42
+    BackgroundImage.ImageColor3 = Color3.fromRGB(220, 190, 255)
+    BackgroundImage.ScaleType = Enum.ScaleType.Crop
+    BackgroundImage.ZIndex = 1
+    BackgroundImage.Parent = Main
+    addCorner(BackgroundImage, 20)
+
     -- ARRASTAR PAINEL
     local dragging = false
     local dragStart
@@ -514,6 +520,7 @@ Enter.MouseButton1Click:Connect(function()
     Subtitle.Font = Enum.Font.Gotham
     Subtitle.TextSize = 12
     Subtitle.TextXAlignment = Enum.TextXAlignment.Left
+    Subtitle.Visible = false
     Subtitle.Parent = Header
 
     local Close = Instance.new("TextButton")
@@ -598,6 +605,7 @@ Enter.MouseButton1Click:Connect(function()
     LegendFrame.Size = UDim2.new(1, -40, 0, 116)
     LegendFrame.Position = UDim2.fromOffset(20, 324)
     LegendFrame.BackgroundColor3 = COLORS.Surface
+    LegendFrame.Visible = false
     LegendFrame.Parent = Main
     addCorner(LegendFrame, 12)
     addStroke(LegendFrame, Color3.fromRGB(51, 65, 85), 0.35, 1)
@@ -628,7 +636,7 @@ Enter.MouseButton1Click:Connect(function()
 
     local Footer = Instance.new("TextLabel")
     Footer.Size = UDim2.new(1, -40, 0, 20)
-    Footer.Position = UDim2.fromOffset(20, 452)
+    Footer.Position = UDim2.fromOffset(20, 324)
     Footer.BackgroundTransparency = 1
     Footer.Text = "TLX  •  Interface renovada"
     Footer.TextColor3 = Color3.fromRGB(100, 116, 139)
