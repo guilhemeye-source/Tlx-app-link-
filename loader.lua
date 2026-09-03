@@ -3,11 +3,15 @@
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 local KEY = "Rlltxw"
 
 local ESP_ENABLED = true
+local NOCLIP_ENABLED = false
+local INFINITE_JUMP_ENABLED = false
+
 local ESP = {}
 
 --==================================================
@@ -39,7 +43,7 @@ local function getRole(player)
         end
     end
 
-    return "Unknown"
+    return "Innocent"
 end
 
 --==================================================
@@ -48,10 +52,7 @@ end
 
 local function removeESP(player)
     if ESP[player] then
-        if ESP[player].Parent then
-            ESP[player]:Destroy()
-        end
-
+        ESP[player]:Destroy()
         ESP[player] = nil
     end
 end
@@ -81,7 +82,6 @@ local function updateESP(player)
 
     local highlight = ESP[player]
 
-    -- Se mudou de personagem, cria um Highlight novo
     if not highlight or highlight.Parent ~= character then
 
         if highlight then
@@ -100,50 +100,41 @@ local function updateESP(player)
 
     local role = getRole(player)
 
+    highlight.Enabled = true
+
     if role == "Murderer" then
 
-        highlight.Enabled = true
         highlight.FillColor = Color3.fromRGB(255, 0, 0)
         highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
 
     elseif role == "Sheriff" then
 
-        highlight.Enabled = true
         highlight.FillColor = Color3.fromRGB(0, 120, 255)
         highlight.OutlineColor = Color3.fromRGB(0, 120, 255)
 
     else
 
-        highlight.Enabled = false
+        highlight.FillColor = Color3.fromRGB(0, 255, 0)
+        highlight.OutlineColor = Color3.fromRGB(0, 255, 0)
 
     end
 end
 
 --==================================================
--- LOOP DO ESP
+-- LOOP ESP
 --==================================================
 
 task.spawn(function()
     while task.wait(0.2) do
-
         for _, player in ipairs(Players:GetPlayers()) do
             updateESP(player)
         end
-
     end
 end)
-
---==================================================
--- PLAYER REMOVING
---==================================================
 
 Players.PlayerRemoving:Connect(function(player)
     removeESP(player)
 end)
-
---==================================================
--- PLAYER ADDED
---==================================================
 
 local function setupPlayer(player)
 
@@ -151,23 +142,16 @@ local function setupPlayer(player)
         return
     end
 
-    player.CharacterAdded:Connect(function(character)
-
-        -- Remove o Highlight antigo
+    player.CharacterAdded:Connect(function()
         removeESP(player)
-
-        -- Espera o personagem carregar
         task.wait(0.5)
-
         updateESP(player)
-
     end)
 
     player.CharacterRemoving:Connect(function()
         removeESP(player)
     end)
 
-    -- Caso o personagem já exista
     if player.Character then
         task.spawn(function()
             task.wait(0.5)
@@ -181,6 +165,61 @@ for _, player in ipairs(Players:GetPlayers()) do
 end
 
 Players.PlayerAdded:Connect(setupPlayer)
+
+--==================================================
+-- NOCLIP
+--==================================================
+
+local function setNoclip(enabled)
+    NOCLIP_ENABLED = enabled
+
+    local character = LocalPlayer.Character
+
+    if not character then
+        return
+    end
+
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = not enabled
+        end
+    end
+end
+
+RunService.Stepped:Connect(function()
+
+    if not NOCLIP_ENABLED then
+        return
+    end
+
+    local character = LocalPlayer.Character
+
+    if character then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+--==================================================
+-- INFINITE JUMP
+--==================================================
+
+UserInputService.JumpRequest:Connect(function()
+
+    if not INFINITE_JUMP_ENABLED then
+        return
+    end
+
+    local character = LocalPlayer.Character
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+
+    if humanoid then
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
 
 --==================================================
 -- KEY GUI
@@ -241,10 +280,8 @@ Instance.new("UICorner", Enter).CornerRadius = UDim.new(0, 8)
 Enter.MouseButton1Click:Connect(function()
 
     if KeyBox.Text ~= KEY then
-
         KeyBox.Text = ""
         KeyBox.PlaceholderText = "Key incorreta!"
-
         return
     end
 
@@ -260,7 +297,7 @@ Enter.MouseButton1Click:Connect(function()
     Gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
     local Main = Instance.new("Frame")
-    Main.Size = UDim2.fromOffset(320, 230)
+    Main.Size = UDim2.fromOffset(320, 330)
     Main.Position = UDim2.fromScale(0.5, 0.5)
     Main.AnchorPoint = Vector2.new(0.5, 0.5)
     Main.BackgroundColor3 = Color3.fromRGB(17, 17, 24)
@@ -297,7 +334,6 @@ Enter.MouseButton1Click:Connect(function()
                 end
 
             end)
-
         end
     end)
 
@@ -317,9 +353,7 @@ Enter.MouseButton1Click:Connect(function()
                 startPosition.Y.Scale,
                 startPosition.Y.Offset + delta.Y
             )
-
         end
-
     end)
 
     --==================================================
@@ -368,10 +402,6 @@ Enter.MouseButton1Click:Connect(function()
 
     Instance.new("UICorner", Open).CornerRadius = UDim.new(1, 0)
 
-    --==================================================
-    -- FECHAR / ABRIR
-    --==================================================
-
     Close.MouseButton1Click:Connect(function()
         Main.Visible = false
         Open.Visible = true
@@ -387,13 +417,13 @@ Enter.MouseButton1Click:Connect(function()
     --==================================================
 
     local ESPButton = Instance.new("TextButton")
-    ESPButton.Size = UDim2.new(1, -30, 0, 50)
-    ESPButton.Position = UDim2.fromOffset(15, 65)
-    ESPButton.Text = "ESP ROLES  [ON]"
+    ESPButton.Size = UDim2.new(1, -30, 0, 45)
+    ESPButton.Position = UDim2.fromOffset(15, 60)
+    ESPButton.Text = "ESP ROLES [ON]"
     ESPButton.TextColor3 = Color3.new(1, 1, 1)
     ESPButton.BackgroundColor3 = Color3.fromRGB(180, 40, 130)
     ESPButton.Font = Enum.Font.GothamBold
-    ESPButton.TextSize = 16
+    ESPButton.TextSize = 15
     ESPButton.Parent = Main
 
     Instance.new("UICorner", ESPButton).CornerRadius = UDim.new(0, 9)
@@ -402,27 +432,83 @@ Enter.MouseButton1Click:Connect(function()
 
         ESP_ENABLED = not ESP_ENABLED
 
-        if ESP_ENABLED then
+        ESPButton.Text = ESP_ENABLED
+            and "ESP ROLES [ON]"
+            or "ESP ROLES [OFF]"
 
-            ESPButton.Text = "ESP ROLES  [ON]"
-            ESPButton.BackgroundColor3 =
-                Color3.fromRGB(180, 40, 130)
+        ESPButton.BackgroundColor3 = ESP_ENABLED
+            and Color3.fromRGB(180, 40, 130)
+            or Color3.fromRGB(35, 35, 45)
 
-        else
-
-            ESPButton.Text = "ESP ROLES  [OFF]"
-            ESPButton.BackgroundColor3 =
-                Color3.fromRGB(35, 35, 45)
-
-            -- Desliga imediatamente
+        if not ESP_ENABLED then
             for _, highlight in pairs(ESP) do
                 if highlight then
                     highlight.Enabled = false
                 end
             end
-
         end
+    end)
 
+    --==================================================
+    -- NOCLIP
+    --==================================================
+
+    local NoclipButton = Instance.new("TextButton")
+    NoclipButton.Size = UDim2.new(1, -30, 0, 45)
+    NoclipButton.Position = UDim2.fromOffset(15, 112)
+    NoclipButton.Text = "NOCLIP [OFF]"
+    NoclipButton.TextColor3 = Color3.new(1, 1, 1)
+    NoclipButton.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    NoclipButton.Font = Enum.Font.GothamBold
+    NoclipButton.TextSize = 15
+    NoclipButton.Parent = Main
+
+    Instance.new("UICorner", NoclipButton).CornerRadius = UDim.new(0, 9)
+
+    NoclipButton.MouseButton1Click:Connect(function()
+
+        setNoclip(not NOCLIP_ENABLED)
+
+        if NOCLIP_ENABLED then
+            NoclipButton.Text = "NOCLIP [ON]"
+            NoclipButton.BackgroundColor3 =
+                Color3.fromRGB(180, 40, 130)
+        else
+            NoclipButton.Text = "NOCLIP [OFF]"
+            NoclipButton.BackgroundColor3 =
+                Color3.fromRGB(35, 35, 45)
+        end
+    end)
+
+    --==================================================
+    -- INFINITE JUMP
+    --==================================================
+
+    local JumpButton = Instance.new("TextButton")
+    JumpButton.Size = UDim2.new(1, -30, 0, 45)
+    JumpButton.Position = UDim2.fromOffset(15, 164)
+    JumpButton.Text = "INFINITE JUMP [OFF]"
+    JumpButton.TextColor3 = Color3.new(1, 1, 1)
+    JumpButton.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    JumpButton.Font = Enum.Font.GothamBold
+    JumpButton.TextSize = 15
+    JumpButton.Parent = Main
+
+    Instance.new("UICorner", JumpButton).CornerRadius = UDim.new(0, 9)
+
+    JumpButton.MouseButton1Click:Connect(function()
+
+        INFINITE_JUMP_ENABLED = not INFINITE_JUMP_ENABLED
+
+        if INFINITE_JUMP_ENABLED then
+            JumpButton.Text = "INFINITE JUMP [ON]"
+            JumpButton.BackgroundColor3 =
+                Color3.fromRGB(180, 40, 130)
+        else
+            JumpButton.Text = "INFINITE JUMP [OFF]"
+            JumpButton.BackgroundColor3 =
+                Color3.fromRGB(35, 35, 45)
+        end
     end)
 
     --==================================================
@@ -430,12 +516,16 @@ Enter.MouseButton1Click:Connect(function()
     --==================================================
 
     local Info = Instance.new("TextLabel")
-    Info.Size = UDim2.new(1, -30, 0, 70)
-    Info.Position = UDim2.fromOffset(15, 125)
+    Info.Size = UDim2.new(1, -30, 0, 85)
+    Info.Position = UDim2.fromOffset(15, 220)
     Info.BackgroundTransparency = 1
+
     Info.Text =
-        "🔴 Murderer   |   🔵 Sheriff\n" ..
-        "ESP detecta Knife/Gun no Backpack ou Character."
+        "🔴 Murderer   |   🔵 Sheriff   |   🟢 Innocent\n" ..
+        "Murderer = Knife\n" ..
+        "Sheriff = Gun\n" ..
+        "Sem arma = Innocent"
+
     Info.TextColor3 = Color3.fromRGB(220, 220, 220)
     Info.Font = Enum.Font.Gotham
     Info.TextSize = 14
