@@ -435,11 +435,11 @@ Enter.MouseButton1Click:Connect(function()
     Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     Gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
-    local MainShadow = addShadow(Gui, UDim2.fromOffset(412, 498), UDim2.fromScale(0.5, 0.5))
+    local MainShadow = addShadow(Gui, UDim2.fromOffset(352, 632), UDim2.fromScale(0.5, 0.5))
     MainShadow.AnchorPoint = Vector2.new(0.5, 0.5)
 
     local Main = Instance.new("Frame")
-    Main.Size = UDim2.fromOffset(400, 486)
+    Main.Size = UDim2.fromOffset(340, 620)
     Main.Position = UDim2.fromScale(0.5, 0.5)
     Main.AnchorPoint = Vector2.new(0.5, 0.5)
     Main.BackgroundColor3 = COLORS.Background
@@ -448,158 +448,109 @@ Enter.MouseButton1Click:Connect(function()
     addCorner(Main, 20)
     addStroke(Main, COLORS.Accent, 0.15, 1.5)
 
-    -- FUNDO DESENHADO DIRETAMENTE NO LUA
+    -- FUNDO PIXELIZADO DA ARTE ENVIADA, DESENHADO DIRETAMENTE NO LUA
     local ArtLayer = Instance.new("Frame")
     ArtLayer.Name = "VioletFantasyBackground"
     ArtLayer.Size = UDim2.fromScale(1, 1)
     ArtLayer.Position = UDim2.fromScale(0, 0)
-    ArtLayer.BackgroundColor3 = Color3.fromRGB(31, 11, 52)
+    ArtLayer.BackgroundColor3 = Color3.fromRGB(22, 8, 38)
     ArtLayer.BorderSizePixel = 0
     ArtLayer.ZIndex = 1
     ArtLayer.ClipsDescendants = true
     ArtLayer.Parent = Main
     addCorner(ArtLayer, 20)
-    addGradient(ArtLayer, Color3.fromRGB(45, 16, 75), Color3.fromRGB(10, 13, 29), 135)
 
-    local function addOrb(parent, position, size, color, transparency)
-        local orb = Instance.new("Frame")
-        orb.Size = size
-        orb.Position = position
-        orb.BackgroundColor3 = color
-        orb.BackgroundTransparency = transparency
-        orb.BorderSizePixel = 0
-        orb.ZIndex = 1
-        orb.Parent = parent
-        addCorner(orb, 999)
-        return orb
+    -- Mosaico compacto baseado na própria imagem roxa enviada.
+    local ART_COLUMNS = 24
+    local ART_ROWS = 44
+    local ART_PALETTE = {
+        Color3.fromRGB(242, 197, 252),
+        Color3.fromRGB(225, 164, 247),
+        Color3.fromRGB(215, 142, 246),
+        Color3.fromRGB(200, 121, 233),
+        Color3.fromRGB(193, 98, 232),
+        Color3.fromRGB(179, 78, 219),
+        Color3.fromRGB(144, 84, 168),
+        Color3.fromRGB(136, 69, 164),
+        Color3.fromRGB(154, 59, 190),
+        Color3.fromRGB(119, 57, 144),
+        Color3.fromRGB(126, 45, 158),
+        Color3.fromRGB(116, 33, 146),
+        Color3.fromRGB(87, 53, 105),
+        Color3.fromRGB(74, 42, 90),
+        Color3.fromRGB(74, 23, 93),
+        Color3.fromRGB(52, 22, 66)
+    }
+    local ART_GRID =
+        "BBBAAA855524885885585100" ..
+        "BBABBB888514535548855103" ..
+        "ABABBEA88853114358523444" ..
+        "BBBBBBBB8855335438413885" ..
+        "BBABBBBBA888854223124588" ..
+        "5BABBB8BB788554321132455" ..
+        "6BB8388AAAA8545310112855" ..
+        "CBB45AAA8AAA8343122585A8" ..
+        "B99AAA7AAAA8832224588A85" ..
+        "999AAA7AAAA8842334585532" ..
+        "9997AA87A7A8323444582123" ..
+        "C978AAA88AA8224534452110" ..
+        "FC787AA84888554423521144" ..
+        "FDD78AA88855552212112387" ..
+        "FDFD788885585544322235A7" ..
+        "DFFD988B75588544422388BB" ..
+        "FFDDBBB85555542213558853" ..
+        "FFDFEC8445544322114A8401" ..
+        "FDCECB954542232211321269" ..
+        "657EECC98432221111116C71" ..
+        "118C9CCCC6422356979CE524" ..
+        "1038889CCC939DFDED9C9225" ..
+        "11148857CDFDDDDCCCCCC613" ..
+        "111485547FFFCCCCCCD99C63" ..
+        "11155544CDDFFCCC9CC96666" ..
+        "315C844BFDCDFCC999C9633B" ..
+        "CAEFD46FFDDCFD9969994155" ..
+        "FFEEFEDFEFDCCFC966796336" ..
+        "FEFEEFFDDEFDCCF996665313" ..
+        "FEEEEEFFDDEFDCDC99663031" ..
+        "FFEEEEEEFDDEDDCCC9963152" ..
+        "FDDEDFEEFFFCDFFCC9963002" ..
+        "FDDDDDDFFEFFDCCCCC996202" ..
+        "FEEDDCCDFEEFE99CC9943231" ..
+        "DDFEDDCCCEBBFC9C96420113" ..
+        "CCCDDDDC9BEBEE9973521210" ..
+        "926DDCCC99BBEE7961432210" ..
+        "D9CCCC66639BAB5262243221" ..
+        "FDDCC931316AA85001122210" ..
+        "DDDC9796735BB82110001320" ..
+        "DDCCC7777796AA1010000220" ..
+        "DCC99931479BA10000000000" ..
+        "DCCC9931799A800000000000" ..
+        "DC99C96979BA810000000000
+
+    for row = 0, ART_ROWS - 1 do
+        local rowData = ART_GRID:sub(row * ART_COLUMNS + 1, (row + 1) * ART_COLUMNS)
+        for column = 0, ART_COLUMNS - 1 do
+            local colorIndex = tonumber(rowData:sub(column + 1, column + 1), 16) + 1
+            local pixel = Instance.new("Frame")
+            pixel.Size = UDim2.new(1 / ART_COLUMNS, 1, 1 / ART_ROWS, 1)
+            pixel.Position = UDim2.new(column / ART_COLUMNS, 0, row / ART_ROWS, 0)
+            pixel.BackgroundColor3 = ART_PALETTE[colorIndex]
+            pixel.BackgroundTransparency = 0.06
+            pixel.BorderSizePixel = 0
+            pixel.ZIndex = 1
+            pixel.Parent = ArtLayer
+        end
     end
 
-    local function addPetal(parent, position, size, rotation, color, transparency)
-        local petal = Instance.new("Frame")
-        petal.Size = size
-        petal.Position = position
-        petal.Rotation = rotation
-        petal.BackgroundColor3 = color
-        petal.BackgroundTransparency = transparency
-        petal.BorderSizePixel = 0
-        petal.ZIndex = 1
-        petal.Parent = parent
-        addCorner(petal, 999)
-        return petal
-    end
-
-    -- Névoa e orbes luminosos
-    addOrb(ArtLayer, UDim2.new(0.62, 0, -0.12, 0), UDim2.fromOffset(260, 260), Color3.fromRGB(192, 132, 252), 0.82)
-    addOrb(ArtLayer, UDim2.new(-0.20, 0, 0.66, 0), UDim2.fromOffset(240, 240), Color3.fromRGB(126, 34, 206), 0.8)
-    addOrb(ArtLayer, UDim2.new(0.18, 0, 0.30, 0), UDim2.fromOffset(150, 150), Color3.fromRGB(232, 121, 249), 0.91)
-    addOrb(ArtLayer, UDim2.new(0.83, 0, 0.66, 0), UDim2.fromOffset(92, 92), Color3.fromRGB(216, 180, 254), 0.88)
-
-    -- Flores abstratas no canto superior direito
-    local flowerColor = Color3.fromRGB(216, 180, 254)
-    local flowerDeep = Color3.fromRGB(126, 34, 206)
-    local flowerCenter = addOrb(ArtLayer, UDim2.new(0.78, 0, 0.12, 0), UDim2.fromOffset(28, 28), Color3.fromRGB(248, 218, 255), 0.18)
-    flowerCenter.ZIndex = 2
-    for _, petalData in ipairs({
-        {UDim2.new(0.74, 0, 0.07, 0), UDim2.fromOffset(38, 18), -26},
-        {UDim2.new(0.82, 0, 0.07, 0), UDim2.fromOffset(38, 18), 26},
-        {UDim2.new(0.74, 0, 0.15, 0), UDim2.fromOffset(38, 18), 26},
-        {UDim2.new(0.82, 0, 0.15, 0), UDim2.fromOffset(38, 18), -26},
-        {UDim2.new(0.77, 0, 0.025, 0), UDim2.fromOffset(38, 18), 0},
-        {UDim2.new(0.77, 0, 0.19, 0), UDim2.fromOffset(38, 18), 0},
-    }) do
-        addPetal(ArtLayer, petalData[1], petalData[2], petalData[3], flowerColor, 0.64)
-    end
-
-    for _, petalData in ipairs({
-        {UDim2.new(0.90, 0, 0.02, 0), UDim2.fromOffset(48, 21), -38},
-        {UDim2.new(0.94, 0, 0.10, 0), UDim2.fromOffset(48, 21), 18},
-        {UDim2.new(0.88, 0, 0.18, 0), UDim2.fromOffset(48, 21), 42},
-        {UDim2.new(0.96, 0, 0.23, 0), UDim2.fromOffset(48, 21), -8},
-    }) do
-        addPetal(ArtLayer, petalData[1], petalData[2], petalData[3], flowerDeep, 0.52)
-    end
-
-    -- Silhueta de espada diagonal, inspirada na arte enviada
-    local swordBlade = Instance.new("Frame")
-    swordBlade.Size = UDim2.fromOffset(17, 245)
-    swordBlade.Position = UDim2.new(0.16, 0, 0.60, 0)
-    swordBlade.Rotation = -52
-    swordBlade.BackgroundColor3 = Color3.fromRGB(91, 72, 112)
-    swordBlade.BackgroundTransparency = 0.44
-    swordBlade.BorderSizePixel = 0
-    swordBlade.ZIndex = 1
-    swordBlade.Parent = ArtLayer
-    addStroke(swordBlade, Color3.fromRGB(216, 180, 254), 0.72, 1)
-    addCorner(swordBlade, 5)
-
-    local swordHighlight = Instance.new("Frame")
-    swordHighlight.Size = UDim2.fromOffset(3, 224)
-    swordHighlight.Position = UDim2.new(0.23, 0, 0.61, 0)
-    swordHighlight.Rotation = -52
-    swordHighlight.BackgroundColor3 = Color3.fromRGB(236, 208, 255)
-    swordHighlight.BackgroundTransparency = 0.58
-    swordHighlight.BorderSizePixel = 0
-    swordHighlight.ZIndex = 2
-    swordHighlight.Parent = ArtLayer
-    addCorner(swordHighlight, 3)
-
-    local swordGuard = Instance.new("Frame")
-    swordGuard.Size = UDim2.fromOffset(78, 9)
-    swordGuard.Position = UDim2.new(0.12, 0, 0.55, 0)
-    swordGuard.Rotation = -52
-    swordGuard.BackgroundColor3 = Color3.fromRGB(163, 122, 191)
-    swordGuard.BackgroundTransparency = 0.35
-    swordGuard.BorderSizePixel = 0
-    swordGuard.ZIndex = 2
-    swordGuard.Parent = ArtLayer
-    addCorner(swordGuard, 6)
-
-    local swordHandle = Instance.new("Frame")
-    swordHandle.Size = UDim2.fromOffset(15, 70)
-    swordHandle.Position = UDim2.new(0.08, 0, 0.47, 0)
-    swordHandle.Rotation = -52
-    swordHandle.BackgroundColor3 = Color3.fromRGB(52, 32, 70)
-    swordHandle.BackgroundTransparency = 0.2
-    swordHandle.BorderSizePixel = 0
-    swordHandle.ZIndex = 2
-    swordHandle.Parent = ArtLayer
-    addCorner(swordHandle, 4)
-
-    -- Volumes de armadura no canto inferior esquerdo
-    local armor = Instance.new("Frame")
-    armor.Size = UDim2.fromOffset(205, 86)
-    armor.Position = UDim2.new(-0.08, 0, 0.83, 0)
-    armor.Rotation = -8
-    armor.BackgroundColor3 = Color3.fromRGB(65, 43, 83)
-    armor.BackgroundTransparency = 0.42
-    armor.BorderSizePixel = 0
-    armor.ZIndex = 1
-    armor.Parent = ArtLayer
-    addCorner(armor, 28)
-    addStroke(armor, Color3.fromRGB(192, 132, 252), 0.8, 1)
-
-    local armorPlate = Instance.new("Frame")
-    armorPlate.Size = UDim2.fromOffset(125, 52)
-    armorPlate.Position = UDim2.new(0.31, 0, 0.76, 0)
-    armorPlate.Rotation = 15
-    armorPlate.BackgroundColor3 = Color3.fromRGB(112, 77, 139)
-    armorPlate.BackgroundTransparency = 0.5
-    armorPlate.BorderSizePixel = 0
-    armorPlate.ZIndex = 1
-    armorPlate.Parent = ArtLayer
-    addCorner(armorPlate, 22)
-    addStroke(armorPlate, Color3.fromRGB(236, 208, 255), 0.84, 1)
-
-    for _, sparkleData in ipairs({
-        {UDim2.new(0.57, 0, 0.24, 0), 5},
-        {UDim2.new(0.88, 0, 0.39, 0), 4},
-        {UDim2.new(0.69, 0, 0.73, 0), 3},
-        {UDim2.new(0.14, 0, 0.29, 0), 4},
-        {UDim2.new(0.47, 0, 0.90, 0), 3},
-    }) do
-        local sparkle = addOrb(ArtLayer, sparkleData[1], UDim2.fromOffset(sparkleData[2], sparkleData[2]), Color3.fromRGB(248, 218, 255), 0.18)
-        sparkle.ZIndex = 2
-    end
+    local ArtOverlay = Instance.new("Frame")
+    ArtOverlay.Name = "ArtReadabilityOverlay"
+    ArtOverlay.Size = UDim2.fromScale(1, 1)
+    ArtOverlay.BackgroundColor3 = Color3.fromRGB(12, 6, 21)
+    ArtOverlay.BackgroundTransparency = 0.48
+    ArtOverlay.BorderSizePixel = 0
+    ArtOverlay.ZIndex = 1
+    ArtOverlay.Parent = ArtLayer
+    addCorner(ArtOverlay, 20)
 
     -- ARRASTAR PAINEL
     local dragging = false
@@ -776,7 +727,7 @@ Enter.MouseButton1Click:Connect(function()
 
     local Footer = Instance.new("TextLabel")
     Footer.Size = UDim2.new(1, -40, 0, 20)
-    Footer.Position = UDim2.fromOffset(20, 324)
+    Footer.Position = UDim2.fromOffset(20, 584)
     Footer.BackgroundTransparency = 1
     Footer.Text = "TLX  •  Interface renovada"
     Footer.TextColor3 = Color3.fromRGB(100, 116, 139)
