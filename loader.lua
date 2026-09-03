@@ -9,7 +9,7 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local KEY = "Rlltxw"
 
-local ESP_ENABLED = true
+local ESP_ENABLED = false
 local NOCLIP_ENABLED = false
 local INFINITE_JUMP_ENABLED = false
 
